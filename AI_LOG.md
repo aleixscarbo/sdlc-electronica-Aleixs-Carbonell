@@ -22,3 +22,14 @@ Un script estructurado (`dia1_sensores.py`) que implementa:
    
 2. **Diseño a través de Funciones Puras (Principio de Abierto/Cerrado - OCP):**
    Para modificar el valor del sensor (por ejemplo, al aplicar un *offset* de calibración), en lugar de crear métodos mutadores dentro de la clase, utilicé la función pura `apply_offset` combinada con `dataclasses.replace`. Esto genera una nueva instancia de `Reading` con el valor corregido sin alterar la medición original. Esto cumple con el **OCP**: nuestro sistema está cerrado a la modificación de estructuras base pero completamente abierto a la extensión de nuevas funciones de procesamiento de datos analógicos o digitales sin poner en riesgo el núcleo de la aplicación.
+
+---
+
+## [ENTRADA 2] Semana 1 - Día 2: FSM Orientada a Objetos, TDD y SOLID
+
+* **Fecha:** 15 de Julio de 2026
+* **Contexto/Objetivo de la Sesión:** Reimplementar el patrón de Máquina de Estados Finitos (FSM) de un semáforo bajo el paradigma de Objetos y crear 4 pruebas unitarias con Pytest.
+* **Prompt Principal Utilizado:** *"Explícame en qué consiste este patrón (AAA) antes de que generemos el código de las pruebas de Pytest."*
+* **Lo que produjo la IA:** Una explicación detallada del patrón Arrange-Act-Assert (AAA) con analogías de electrónica. Además, proporcionó la estructura del archivo `fsm_demo.py` y los 4 tests exactos solicitados en `test_fsm.py` (estado inicial, RED->GREEN, ciclo completo y conteo).
+* **Mi Decisión de Ingeniería y el porqué (Reflexión SOLID - SRP):** Decidí estructurar la clase `TrafficLightFSM` aislando completamente la lógica matemática de transición. A diferencia de la programación en C para microcontroladores (donde un `switch-case` a menudo mezcla el cambio de estado con la activación física de los pines LED), mi clase en Python cumple estrictamente con el **Principio de Responsabilidad Única (SRP) de SOLID**. 
+La única razón para cambiar esta clase es si cambian las reglas lógicas del semáforo. La clase no imprime texto en consola ni interactúa con hardware externo; solo administra la transición de estados y el conteo de ciclos internos. Esto hace que el módulo sea altamente cohesivo y fácil de testear.
