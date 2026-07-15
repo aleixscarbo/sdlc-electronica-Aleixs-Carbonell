@@ -33,3 +33,19 @@ Un script estructurado (`dia1_sensores.py`) que implementa:
 * **Lo que produjo la IA:** Una explicación detallada del patrón Arrange-Act-Assert (AAA) con analogías de electrónica. Además, proporcionó la estructura del archivo `fsm_demo.py` y los 4 tests exactos solicitados en `test_fsm.py` (estado inicial, RED->GREEN, ciclo completo y conteo).
 * **Mi Decisión de Ingeniería y el porqué (Reflexión SOLID - SRP):** Decidí estructurar la clase `TrafficLightFSM` aislando completamente la lógica matemática de transición. A diferencia de la programación en C para microcontroladores (donde un `switch-case` a menudo mezcla el cambio de estado con la activación física de los pines LED), mi clase en Python cumple estrictamente con el **Principio de Responsabilidad Única (SRP) de SOLID**. 
 La única razón para cambiar esta clase es si cambian las reglas lógicas del semáforo. La clase no imprime texto en consola ni interactúa con hardware externo; solo administra la transición de estados y el conteo de ciclos internos. Esto hace que el módulo sea altamente cohesivo y fácil de testear.
+
+---
+
+## [ENTRADA 3] Semana 1 - Día 3: SOLID en la Práctica (S, O, L)
+
+* **Fecha:** 15 de Juio de 2026
+* **Contexto/Objetivo de la Sesión:** Implementar de forma práctica en Python los tres primeros principios SOLID (Single Responsibility, Open/Closed y Liskov Substitution) utilizando un dominio de telemetría de sensores IoT, y estructurar una suite de 6 pruebas unitarias.
+* **Prompt Principal Utilizado:** *"Día 3 · Miércoles — SOLID en la práctica: S, O y L... Para cada principio: el ejemplo 'mal' y el 'bien', más 2 tests. Commit al final del día."*
+
+### Lo que produjo la IA:
+La arquitectura modular del script `solid_srp_ocp_lsp.py` dividiendo las responsabilidades unidas (antipatrón) en entidades desacopladas. Diseñó estrategias de alerta polimórficas basadas en `abc.ABC` y demostró el cumplimiento del contrato de tipos para evitar la degradación del sistema bajo la sustitución de Liskov. Además, proveyó el archivo de pruebas correspondiente verificado con `pytest`.
+
+### Mi Decisión de Ingeniería y el porqué (Reflexión SOLID - S, O, L):
+1. **Separación de Persistencia y Adquisición (SRP):** Al mapear el diseño, entendí que un objeto no debe saber cómo se extraen los datos del pin analógico y al mismo tiempo cómo se escriben en el disco duro. Al aislar `SensorReader` de `DataLogger`, si los métodos de almacenamiento cambian en el backend, el módulo que interactúa con las señales físicas permanece intacto.
+2. **Abstracción del Sistema de Alertas (OCP):** El detector de anomalías (`AnomalyDetector`) ahora depende de la abstracción `AlertStrategy`, no de una cadena de texto estática. Esto asegura que si el día de mañana implementamos un envío de correo electrónico (`EmailAlert`), el código del detector estará blindado y cerrado a modificaciones, cumpliendo con OCP.
+3. **Contrato Estricto de Clases Hijas (LSP):** Al analizar Liskov, comprobé que las subclases no deben alterar la semántica de la clase padre. Si un método del padre promete devolver un `float`, la subclase jamás debe retornar tipos incompatibles o lanzar excepciones que fuercen al cliente a usar condicionales de tipo, garantizando la modularidad del software.
