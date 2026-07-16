@@ -49,3 +49,18 @@ La arquitectura modular del script `solid_srp_ocp_lsp.py` dividiendo las respons
 1. **Separación de Persistencia y Adquisición (SRP):** Al mapear el diseño, entendí que un objeto no debe saber cómo se extraen los datos del pin analógico y al mismo tiempo cómo se escriben en el disco duro. Al aislar `SensorReader` de `DataLogger`, si los métodos de almacenamiento cambian en el backend, el módulo que interactúa con las señales físicas permanece intacto.
 2. **Abstracción del Sistema de Alertas (OCP):** El detector de anomalías (`AnomalyDetector`) ahora depende de la abstracción `AlertStrategy`, no de una cadena de texto estática. Esto asegura que si el día de mañana implementamos un envío de correo electrónico (`EmailAlert`), el código del detector estará blindado y cerrado a modificaciones, cumpliendo con OCP.
 3. **Contrato Estricto de Clases Hijas (LSP):** Al analizar Liskov, comprobé que las subclases no deben alterar la semántica de la clase padre. Si un método del padre promete devolver un `float`, la subclase jamás debe retornar tipos incompatibles o lanzar excepciones que fuercen al cliente a usar condicionales de tipo, garantizando la modularidad del software.
+
+---
+
+## [ENTRADA 4] Semana 1 - Día 4: SOLID Completo (I y D) e Inyección de Dependencias
+
+* **Fecha:** 16 de Julio de 2026
+* **Contexto/Objetivo de la Sesión:** Concluir el dominio de los principios SOLID implementando la Segregación de Interfaces (ISP) y la Inversión de Dependencias (DIP) mediante Protocolos y repositorios en memoria para pruebas.
+* **Prompt Principal Utilizado:** *"Día 4 · Jueves — SOLID completo: I y D... Completa la biblioteca en semana1/solid_isp_dip.py. ISP: divide una interfaz gorda... DIP: usa Protocol para que DataProcessor dependa de una abstracción DataRepository"*
+
+### Lo que produjo la IA:
+Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorInterface`) y su corrección fraccionada (`Readable`, `Writable`, `Calibratable`). Además, implementó el patrón de Inversión de Dependencias usando `typing.Protocol`, aislando el procesador de datos de la tecnología de almacenamiento, acompañado de su respectivo repositorio en memoria (`InMemoryRepository`) para facilitar las pruebas con Pytest.
+
+### Mi Decisión de Ingeniería y el porqué (Reflexión SOLID - I, D):
+1. **Interfaces Segregadas (ISP):** Rechacé la creación de clases base masivas que obliguen a los sensores más básicos a cargar con métodos que no tienen sentido para su hardware físico. Al dividir las responsabilidades en micro-contratos lógicos, mi arquitectura simula el ruteo eficiente de un PCB: conectamos solo los pines/métodos estrictamente necesarios.
+2. **El "Pago" del DIP (Inyección de Dependencias):** Entendí la inmensa ventaja del principio DIP en entornos profesionales. Al forzar al `DataProcessor` a depender del Protocolo `DataRepository` y no de una conexión SQL dura, logré que el sistema fuera **100% testeable** en aislamiento. Inyectar `InMemoryRepository` en mis pruebas unitarias permite auditar la lógica del procesador a velocidades de milisegundos sin latencia de red, garantizando un código de grado de producción.
