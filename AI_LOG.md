@@ -64,3 +64,14 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
 ### Mi Decisión de Ingeniería y el porqué (Reflexión SOLID - I, D):
 1. **Interfaces Segregadas (ISP):** Rechacé la creación de clases base masivas que obliguen a los sensores más básicos a cargar con métodos que no tienen sentido para su hardware físico. Al dividir las responsabilidades en micro-contratos lógicos, mi arquitectura simula el ruteo eficiente de un PCB: conectamos solo los pines/métodos estrictamente necesarios.
 2. **El "Pago" del DIP (Inyección de Dependencias):** Entendí la inmensa ventaja del principio DIP en entornos profesionales. Al forzar al `DataProcessor` a depender del Protocolo `DataRepository` y no de una conexión SQL dura, logré que el sistema fuera **100% testeable** en aislamiento. Inyectar `InMemoryRepository` en mis pruebas unitarias permite auditar la lógica del procesador a velocidades de milisegundos sin latencia de red, garantizando un código de grado de producción.
+
+---
+
+## [ENTRADA 5] Semana 1 - Día 5: Ejercicio Integrador "El Driver Modernizado"
+
+* **Fecha:** 17 de Julio de 2026
+* **Contexto:** Reimplementación de un driver UART de C embebido a Python moderno aplicando todos los principios SOLID y concurrencia.
+* **Prompt Principal Utilizado:** *"Día 5 · Viernes — Ejercicio integrador: 'El Driver Modernizado'... Uso de IA: escribe la firma del test y el docstring; deja que Copilot sugiera la implementación; revisa línea por línea."*
+* **Uso de IA y Revisión de Código:** Utilicé la IA generativa como Copiloto. Le proporcioné las firmas de los tests y los *docstrings* (ej. `def test_device_full_flow(): """Prueba de integración: Conexión -> RX -> Parseo."""`). La IA sugirió las aserciones basadas en mis clases. 
+* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Agregué el decorador `@pytest.fixture` para aislar el setup del `UartDevice`. La IA inicialmente sugería instanciar el dispositivo manualmente dentro de cada uno de los 3 tests del device.
+  2. *Por qué (Reflexión SOLID & TDD):* Al usar Fixtures centralizamos el "Arrange" del patrón AAA, respetando el principio DRY (Don't Repeat Yourself) y logrando inyectar las dependencias (DIP) de la configuración y de los 3 parsers (incluyendo el parser CAN de extensión) de manera limpia y modular en cada test.
