@@ -1,0 +1,18 @@
+[tool.pytest.ini_options]
+addopts = "--cov=semana2 --cov-fail-under=80 -v"
+
+[tool.mypy]
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort (ordenamiento de imports)
+    "UP", # pyupgrade (sintaxis moderna)
+    "B"   # flake8-bugbear (detecta posibles bugs)
+]

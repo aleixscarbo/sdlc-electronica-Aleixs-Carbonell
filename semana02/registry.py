@@ -1,4 +1,5 @@
-from typing import Dict, Any
+from typing import Any
+
 
 class SensorNotFoundError(Exception):
     """Excepción lanzada cuando se consulta un sensor inexistente."""
@@ -7,7 +8,7 @@ class SensorNotFoundError(Exception):
 class SensorRegistry:
     def __init__(self) -> None:
         # Diccionario fuertemente tipado
-        self._sensors: Dict[str, Any] = {}
+        self._sensors: dict[str, Any] = {}
 
     def get(self, sensor_id: str) -> Any:
         """
