@@ -108,3 +108,15 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
 * **Uso de IA y Revisión de Código:** Utilicé a la IA para guiar el flujo operativo de Git y estructurar la inyección del código. Me proporcionó el test `test_get_unknown_sensor_raises` que forza un `ImportError` inicial (Fase RED), la implementación mínima basada en diccionarios para superarlo (Fase GREEN), y finalmente la reestructuración del código agregando el módulo `typing` de Python (Fase REFACTOR).
 * **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Al momento de hacer los commits, la guía original sugería `git commit -am`. Lo cambié por `git add .` seguido de `git commit -m`. 
   2. *Por qué (Reflexión de Git):* La bandera `-a` en `git commit` solo añade al stage los archivos que Git ya rastrea (tracked files). Como estaba creando archivos `.py` completamente nuevos para esta historia de usuario, usar `-am` habría fallado silenciosamente sin registrar mi código. Hacer el staging explícito garantiza que el historial sea inquebrantable para la auditoría de código.
+
+  ---
+
+  ## [ENTRADA 4] Semana 2 - Día 4: Automatización de Calidad (DoD, Ruff, Mypy y Cobertura)
+
+* **Fecha:** 25 de Julio de 2026
+* **Contexto:** Establecimiento de la *Definition of Done* y configuración de herramientas de análisis estático y cobertura (`pyproject.toml` con Ruff, Mypy y Pytest-cov) para garantizar la calidad del código de forma automatizada.
+* **Prompt Principal Utilizado:** *"Día 4 · Jueves — Definition of Done y calidad automatizada. Escribe DEFINITION_OF_DONE.md y configura pyproject.toml con reglas de ruff (E, F, I, UP, B), pytest con --cov-fail-under=80 y mypy con disallow_untyped_defs."*
+* **Uso de IA y Revisión de Código:** La IA fungió como ingeniero de DevOps, proporcionándome la checklist de calidad para el archivo `DEFINITION_OF_DONE.md` y la estructura del `pyproject.toml` con las banderas estrictas requeridas. Me indicó los comandos para instalar las dependencias necesarias (`pytest-cov`, `ruff`, `mypy`) y cómo ejecutar las auditorías en mi terminal.
+* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* La IA me indicó instalar las nuevas librerías, pero omitió guardar estos cambios en el control de dependencias. Lo corregí ejecutando de forma autónoma `pip freeze > requirements.txt`. 
+  2. *Cambio:* Al ejecutar el análisis estricto de `mypy`, el linter falló porque la IA estructuró el test inicial (del Día 3) sin tipado de retorno. Modifiqué manualmente el archivo `test_registry.py` agregando `-> None` a la función.
+  *Por qué (Criterio Técnico):* El primer cambio garantiza la reproducibilidad del entorno virtual para otros desarrolladores o para el servidor de despliegue continuo. El segundo cambio fue obligatorio para cumplir con la regla `disallow_untyped_defs = true` que definimos en el `pyproject.toml`, garantizando así que no haya "puntos ciegos" de tipado estático en el repositorio, ni siquiera en las pruebas.
