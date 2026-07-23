@@ -97,3 +97,14 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
 * **Uso de IA y Revisión de Código:** Utilicé a la IA no para escribir la historia desde cero, sino como par revisor (QA/Testing) para validar la robustez de mi lógica. La IA confirmó que los escenarios iniciales eran verificables, pero detectó una carencia crítica: no estaba probando qué ocurre si los datos del sensor llegan corruptos (ej. temperatura en valor `None` o valores extremos ilógicos como `-1000 °C` debido a un corto circuito en el termistor).
 * **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Decidí no incluir la verificación de "cortocircuito del termistor" en la US-02 de Lógica de Negocio, sino delegar la validación de tipos y formatos a la US-01 (Ingesta de Lectura). 
   2. *Por qué (Reflexión SOLID & SRP):* Por el Principio de Responsabilidad Única (SRP), el motor de anomalías (US-02) debe confiar en que los objetos `SensorReading` que recibe ya están validados. Si intentara validar tipos de datos dentro del detector de anomalías, estaría acoplando la limpieza de datos con la lógica de negocio, lo que haría los tests futuros más frágiles y difíciles de mantener.
+
+  ---
+
+## [ENTRADA 3] Semana 2 - Día 3: Práctica de TDD Estricto y Ciclo Red-Green-Refactor
+
+* **Fecha:** 24 de Julio de 2026
+* **Contexto:** Implementación de la clase `SensorRegistry` y sus excepciones personalizadas siguiendo la regla absoluta del Desarrollo Guiado por Pruebas (TDD) para la US-01.
+* **Prompt Principal Utilizado:** *"Día 3 · Miércoles — TDD estricto... Implementa un SensorRegistry con la regla absoluta: cada commit de test precede al commit del código. Dame los pasos exactos para evidenciarlo en Git."*
+* **Uso de IA y Revisión de Código:** Utilicé a la IA para guiar el flujo operativo de Git y estructurar la inyección del código. Me proporcionó el test `test_get_unknown_sensor_raises` que forza un `ImportError` inicial (Fase RED), la implementación mínima basada en diccionarios para superarlo (Fase GREEN), y finalmente la reestructuración del código agregando el módulo `typing` de Python (Fase REFACTOR).
+* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Al momento de hacer los commits, la guía original sugería `git commit -am`. Lo cambié por `git add .` seguido de `git commit -m`. 
+  2. *Por qué (Reflexión de Git):* La bandera `-a` en `git commit` solo añade al stage los archivos que Git ya rastrea (tracked files). Como estaba creando archivos `.py` completamente nuevos para esta historia de usuario, usar `-am` habría fallado silenciosamente sin registrar mi código. Hacer el staging explícito garantiza que el historial sea inquebrantable para la auditoría de código.
