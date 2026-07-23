@@ -75,3 +75,25 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
 * **Uso de IA y Revisión de Código:** Utilicé la IA generativa como Copiloto. Le proporcioné las firmas de los tests y los *docstrings* (ej. `def test_device_full_flow(): """Prueba de integración: Conexión -> RX -> Parseo."""`). La IA sugirió las aserciones basadas en mis clases. 
 * **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Agregué el decorador `@pytest.fixture` para aislar el setup del `UartDevice`. La IA inicialmente sugería instanciar el dispositivo manualmente dentro de cada uno de los 3 tests del device.
   2. *Por qué (Reflexión SOLID & TDD):* Al usar Fixtures centralizamos el "Arrange" del patrón AAA, respetando el principio DRY (Don't Repeat Yourself) y logrando inyectar las dependencias (DIP) de la configuración y de los 3 parsers (incluyendo el parser CAN de extensión) de manera limpia y modular en cada test.
+
+  ---
+
+## [ENTRADA 1] Semana 2 - Día 1: Scrum en Profundidad y Tablero Kanban Ágil
+
+* **Fecha:** 22 de Julio de 2026
+* **Contexto:** Estudio de la Scrum Guide 2020, comprensión de roles, eventos, artefactos y el establecimiento inicial del espacio de trabajo ágil en GitHub Projects para la Evaluación 1 del sistema IoT.
+* **Prompt Principal Utilizado:** *"Ayúdame a sintetizar la Scrum Guide 2020 conectando los conceptos de roles, eventos, artefactos y Definition of Done con la transición de un ingeniero electrónico a software backend, y dame los pasos para estructurar un tablero Kanban con 5 columnas en GitHub Projects."*
+* **Uso de IA y Revisión de Código:** Utilicé a la IA como copiloto de arquitectura de procesos para organizar de forma estructurada los conceptos teóricos de Scrum. La IA propuso una tabla de equivalencias y la organización del tablero. Revisé la propuesta línea por línea contrastándola directamente con los principios rectores de la guía oficial de Scrum 2020 para evitar desviaciones conceptuales.
+* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Ajusté los timeboxes propuestos originalmente por la IA para que no reflejaran los plazos mensuales estándar de Scrum, sino una escala adaptada a nuestro ciclo operativo semanal de desarrollo. 
+  2. *Por qué (Reflexión Ágil):* Un Sprint de un mes no es viable para una habilitación intensiva basada en entregas semanales; adaptar los bloques de tiempo (Sprint Planning, Review, Retrospective) a un ciclo de 7 días mantiene el ritmo del SDLC ágil sin perder la disciplina de inspección y adaptación.
+
+---
+
+## [ENTRADA 2] Semana 2 - Día 2: Redacción de Product Backlog y Auditoría Gherkin
+
+* **Fecha:** 23 de Julio de 2026
+* **Contexto:** Definición del Product Backlog para el sistema de monitoreo IoT (Evaluación 1). Creación de Historias de Usuario con escenarios Gherkin y estimación mediante Story Points (Fibonacci).
+* **Prompt Principal Utilizado:** *"He redactado la US-02 para detectar anomalías de temperatura (> 35 °C). Por favor audita mis escenarios Gherkin: ¿Son verificables? ¿Son ambiguos? ¿Qué caso borde me está faltando? Actúa como un QA Engineer estricto."*
+* **Uso de IA y Revisión de Código:** Utilicé a la IA no para escribir la historia desde cero, sino como par revisor (QA/Testing) para validar la robustez de mi lógica. La IA confirmó que los escenarios iniciales eran verificables, pero detectó una carencia crítica: no estaba probando qué ocurre si los datos del sensor llegan corruptos (ej. temperatura en valor `None` o valores extremos ilógicos como `-1000 °C` debido a un corto circuito en el termistor).
+* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Decidí no incluir la verificación de "cortocircuito del termistor" en la US-02 de Lógica de Negocio, sino delegar la validación de tipos y formatos a la US-01 (Ingesta de Lectura). 
+  2. *Por qué (Reflexión SOLID & SRP):* Por el Principio de Responsabilidad Única (SRP), el motor de anomalías (US-02) debe confiar en que los objetos `SensorReading` que recibe ya están validados. Si intentara validar tipos de datos dentro del detector de anomalías, estaría acoplando la limpieza de datos con la lógica de negocio, lo que haría los tests futuros más frágiles y difíciles de mantener.
