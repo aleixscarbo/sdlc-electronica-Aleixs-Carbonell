@@ -1,5 +1,5 @@
-import pytest
 from detector import AnomalyDetector, SensorReading
+
 
 def test_detects_high_temperature_anomaly() -> None:
     # Arrange: Inicializamos el detector con un límite de 35.0 °C
