@@ -75,3 +75,48 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
 * **Uso de IA y Revisión de Código:** Utilicé la IA generativa como Copiloto. Le proporcioné las firmas de los tests y los *docstrings* (ej. `def test_device_full_flow(): """Prueba de integración: Conexión -> RX -> Parseo."""`). La IA sugirió las aserciones basadas en mis clases. 
 * **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Agregué el decorador `@pytest.fixture` para aislar el setup del `UartDevice`. La IA inicialmente sugería instanciar el dispositivo manualmente dentro de cada uno de los 3 tests del device.
   2. *Por qué (Reflexión SOLID & TDD):* Al usar Fixtures centralizamos el "Arrange" del patrón AAA, respetando el principio DRY (Don't Repeat Yourself) y logrando inyectar las dependencias (DIP) de la configuración y de los 3 parsers (incluyendo el parser CAN de extensión) de manera limpia y modular en cada test.
+
+  ---
+
+## [ENTRADA 1] Semana 2 - Día 1: Scrum en Profundidad y Tablero Kanban Ágil
+
+* **Fecha:** 22 de Julio de 2026
+* **Contexto:** Estudio de la Scrum Guide 2020, comprensión de roles, eventos, artefactos y el establecimiento inicial del espacio de trabajo ágil en GitHub Projects para la Evaluación 1 del sistema IoT.
+* **Prompt Principal Utilizado:** *"Ayúdame a sintetizar la Scrum Guide 2020 conectando los conceptos de roles, eventos, artefactos y Definition of Done con la transición de un ingeniero electrónico a software backend, y dame los pasos para estructurar un tablero Kanban con 5 columnas en GitHub Projects."*
+* **Uso de IA y Revisión de Código:** Utilicé a la IA como copiloto de arquitectura de procesos para organizar de forma estructurada los conceptos teóricos de Scrum. La IA propuso una tabla de equivalencias y la organización del tablero. Revisé la propuesta línea por línea contrastándola directamente con los principios rectores de la guía oficial de Scrum 2020 para evitar desviaciones conceptuales.
+* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Ajusté los timeboxes propuestos originalmente por la IA para que no reflejaran los plazos mensuales estándar de Scrum, sino una escala adaptada a nuestro ciclo operativo semanal de desarrollo. 
+  2. *Por qué (Reflexión Ágil):* Un Sprint de un mes no es viable para una habilitación intensiva basada en entregas semanales; adaptar los bloques de tiempo (Sprint Planning, Review, Retrospective) a un ciclo de 7 días mantiene el ritmo del SDLC ágil sin perder la disciplina de inspección y adaptación.
+
+---
+
+## [ENTRADA 2] Semana 2 - Día 2: Redacción de Product Backlog y Auditoría Gherkin
+
+* **Fecha:** 23 de Julio de 2026
+* **Contexto:** Definición del Product Backlog para el sistema de monitoreo IoT (Evaluación 1). Creación de Historias de Usuario con escenarios Gherkin y estimación mediante Story Points (Fibonacci).
+* **Prompt Principal Utilizado:** *"He redactado la US-02 para detectar anomalías de temperatura (> 35 °C). Por favor audita mis escenarios Gherkin: ¿Son verificables? ¿Son ambiguos? ¿Qué caso borde me está faltando? Actúa como un QA Engineer estricto."*
+* **Uso de IA y Revisión de Código:** Utilicé a la IA no para escribir la historia desde cero, sino como par revisor (QA/Testing) para validar la robustez de mi lógica. La IA confirmó que los escenarios iniciales eran verificables, pero detectó una carencia crítica: no estaba probando qué ocurre si los datos del sensor llegan corruptos (ej. temperatura en valor `None` o valores extremos ilógicos como `-1000 °C` debido a un corto circuito en el termistor).
+* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Decidí no incluir la verificación de "cortocircuito del termistor" en la US-02 de Lógica de Negocio, sino delegar la validación de tipos y formatos a la US-01 (Ingesta de Lectura). 
+  2. *Por qué (Reflexión SOLID & SRP):* Por el Principio de Responsabilidad Única (SRP), el motor de anomalías (US-02) debe confiar en que los objetos `SensorReading` que recibe ya están validados. Si intentara validar tipos de datos dentro del detector de anomalías, estaría acoplando la limpieza de datos con la lógica de negocio, lo que haría los tests futuros más frágiles y difíciles de mantener.
+
+  ---
+
+## [ENTRADA 3] Semana 2 - Día 3: Práctica de TDD Estricto y Ciclo Red-Green-Refactor
+
+* **Fecha:** 24 de Julio de 2026
+* **Contexto:** Implementación de la clase `SensorRegistry` y sus excepciones personalizadas siguiendo la regla absoluta del Desarrollo Guiado por Pruebas (TDD) para la US-01.
+* **Prompt Principal Utilizado:** *"Día 3 · Miércoles — TDD estricto... Implementa un SensorRegistry con la regla absoluta: cada commit de test precede al commit del código. Dame los pasos exactos para evidenciarlo en Git."*
+* **Uso de IA y Revisión de Código:** Utilicé a la IA para guiar el flujo operativo de Git y estructurar la inyección del código. Me proporcionó el test `test_get_unknown_sensor_raises` que forza un `ImportError` inicial (Fase RED), la implementación mínima basada en diccionarios para superarlo (Fase GREEN), y finalmente la reestructuración del código agregando el módulo `typing` de Python (Fase REFACTOR).
+* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Al momento de hacer los commits, la guía original sugería `git commit -am`. Lo cambié por `git add .` seguido de `git commit -m`. 
+  2. *Por qué (Reflexión de Git):* La bandera `-a` en `git commit` solo añade al stage los archivos que Git ya rastrea (tracked files). Como estaba creando archivos `.py` completamente nuevos para esta historia de usuario, usar `-am` habría fallado silenciosamente sin registrar mi código. Hacer el staging explícito garantiza que el historial sea inquebrantable para la auditoría de código.
+
+  ---
+
+  ## [ENTRADA 4] Semana 2 - Día 4: Automatización de Calidad (DoD, Ruff, Mypy y Cobertura)
+
+* **Fecha:** 25 de Julio de 2026
+* **Contexto:** Establecimiento de la *Definition of Done* y configuración de herramientas de análisis estático y cobertura (`pyproject.toml` con Ruff, Mypy y Pytest-cov) para garantizar la calidad del código de forma automatizada.
+* **Prompt Principal Utilizado:** *"Día 4 · Jueves — Definition of Done y calidad automatizada. Escribe DEFINITION_OF_DONE.md y configura pyproject.toml con reglas de ruff (E, F, I, UP, B), pytest con --cov-fail-under=80 y mypy con disallow_untyped_defs."*
+* **Uso de IA y Revisión de Código:** La IA fungió como ingeniero de DevOps, proporcionándome la checklist de calidad para el archivo `DEFINITION_OF_DONE.md` y la estructura del `pyproject.toml` con las banderas estrictas requeridas. Me indicó los comandos para instalar las dependencias necesarias (`pytest-cov`, `ruff`, `mypy`) y cómo ejecutar las auditorías en mi terminal.
+* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* La IA me indicó instalar las nuevas librerías, pero omitió guardar estos cambios en el control de dependencias. Lo corregí ejecutando de forma autónoma `pip freeze > requirements.txt`. 
+  2. *Cambio:* Al ejecutar el análisis estricto de `mypy`, el linter falló porque la IA estructuró el test inicial (del Día 3) sin tipado de retorno. Modifiqué manualmente el archivo `test_registry.py` agregando `-> None` a la función.
+  *Por qué (Criterio Técnico):* El primer cambio garantiza la reproducibilidad del entorno virtual para otros desarrolladores o para el servidor de despliegue continuo. El segundo cambio fue obligatorio para cumplir con la regla `disallow_untyped_defs = true` que definimos en el `pyproject.toml`, garantizando así que no haya "puntos ciegos" de tipado estático en el repositorio, ni siquiera en las pruebas.
