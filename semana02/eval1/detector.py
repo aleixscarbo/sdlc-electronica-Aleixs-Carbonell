@@ -24,4 +24,8 @@ class AnomalyDetector:
         """Evalúa si la lectura excede los umbrales configurados."""
         if reading.temperature > self.temp_threshold:
             return {"is_anomaly": True, "type": "HIGH_TEMPERATURE"}
+            
+        if reading.humidity > self.humidity_threshold:
+            return {"is_anomaly": True, "type": "HIGH_HUMIDITY"}
+            
         return {"is_anomaly": False, "type": "NORMAL"}
