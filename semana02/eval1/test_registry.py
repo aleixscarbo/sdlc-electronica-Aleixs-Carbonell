@@ -7,4 +7,4 @@ from registry import SensorNotFoundError, SensorRegistry
 def test_get_unknown_sensor_raises() -> None:
     registry = SensorRegistry()
     with pytest.raises(SensorNotFoundError):
-        registry.get("GHOST-99")
+        registry.get_sensor("GHOST-99")
