@@ -3,25 +3,31 @@
 El siguiente diagrama ilustra la arquitectura de la solución de monitoreo IoT desarrollada durante la Evaluación 1, destacando la separación de responsabilidades entre la ingesta de datos, el motor de reglas y las estrategias de persistencia.
 
 ```mermaid
-C4Container
-    title Diagrama de Contenedores - Sistema de Monitoreo IoT (Bodega)
+flowchart TD
+    %% Estilos de Nivel C4
+    classDef person fill:#08427b,stroke:#052e52,color:#ffffff,stroke-width:2px;
+    classDef container fill:#1168bd,stroke:#0b4880,color:#ffffff,stroke-width:2px;
+    classDef external fill:#999999,stroke:#666666,color:#ffffff,stroke-width:2px;
 
-    Person(operador, "Operador de Planta", "Supervisa las alertas físicas en consola.")
-    Person(qa, "Auditor QA", "Revisa el registro inmutable de anomalías.")
+    %% Actores
+    operador["👤 Operador de Planta<br/><i>[Persona]</i><br/>Supervisa las alertas físicas en consola."]:::person
+    qa["👤 Auditor QA<br/><i>[Persona]</i><br/>Revisa el registro inmutable de anomalías."]:::person
 
-    System_Boundary(iot_system, "SensorHub (Núcleo IoT)") {
-        Container(simulator, "Sensor Simulator", "Python", "Genera telemetría estocástica (Gaussiana) simulando ruido térmico y de humedad ambiental.")
-        Container(registry, "Sensor Registry", "Python", "Almacena en memoria de forma temporal el estado y telemetría de los 10 sensores activos.")
-        Container(detector, "Anomaly Detector", "Python", "Motor de evaluación (T > 35°C, H > 80%). Clasifica lecturas y dispara eventos de anomalía.")
-        Container(alert_manager, "Alert Manager", "Python (Patrón Strategy)", "Recibe eventos críticos y despacha alertas a múltiples interfaces de salida.")
-    }
+    %% Límite del Sistema
+    subgraph iot_system ["📦 SensorHub - Núcleo IoT (Sistema)"]
+        simulator["⚡ Sensor Simulator<br/><i>[Contenedor: Python]</i><br/>Genera telemetría estocástica (Gaussiana)."]:::container
+        registry["🗃️ Sensor Registry<br/><i>[Contenedor: Python]</i><br/>Almacena en memoria el historial de 10 sensores."]:::container
+        detector["🔍 Anomaly Detector<br/><i>[Contenedor: Python]</i><br/>Motor de reglas (T > 35°C, H > 80%)."]:::container
+        alert_manager["🔔 Alert Manager<br/><i>[Contenedor: Python - Patrón Strategy]</i><br/>Despacha eventos a múltiples salidas."]:::container
+    end
 
-    SystemExt(file_system, "File System (OS)", "Almacenamiento local del servidor.")
+    %% Sistema Externo
+    file_system["📄 File System (OS)<br/><i>[Sistema Externo]</i><br/>Almacenamiento de logs de auditoría."]:::external
 
-    Rel(simulator, registry, "Ingesta de lecturas (SensorReading)", "Llamada a método")
-    Rel(registry, detector, "Envía telemetría para validación", "Llamada a método")
-    Rel(detector, alert_manager, "Dispara eventos (HIGH_TEMP / HIGH_HUM)", "Llamada a método")
-    
-    Rel(alert_manager, operador, "Notifica alerta visual", "Stdout (Console)")
-    Rel(alert_manager, file_system, "Persiste bitácora en 'alerts.log'", "Escritura (Append)")
-    Rel(qa, file_system, "Audita historial de métricas", "Lectura OS")
+    %% Relaciones y Flujo de Datos
+    simulator -->|"Ingesta de lecturas (SensorReading)"| registry
+    registry -->|"Envía telemetría para validación"| detector
+    detector -->|"Dispara eventos (HIGH_TEMP / HIGH_HUM)"| alert_manager
+    alert_manager -->|"Notifica alerta visual (Console)"| operador
+    alert_manager -->|"Persiste bitácora ('alerts.log')"| file_system
+    qa -->|"Audita historial de métricas"| file_system
