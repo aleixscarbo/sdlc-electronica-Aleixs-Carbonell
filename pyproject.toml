@@ -1,5 +1,5 @@
 [tool.pytest.ini_options]
-addopts = "--cov=semana2 --cov-fail-under=80 -v"
+addopts = "--cov=semana02 --cov-fail-under=80 -v"
 
 [tool.mypy]
 disallow_untyped_defs = true
