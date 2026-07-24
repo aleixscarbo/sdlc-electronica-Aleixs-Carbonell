@@ -1,6 +1,8 @@
 import random
+
 from detector import SensorReading
 from simulator import SensorSimulator
+
 
 def test_simulator_generates_gaussian_distribution() -> None:
     # Arrange: Semilla fija para que el test sea determinista y reproducible
