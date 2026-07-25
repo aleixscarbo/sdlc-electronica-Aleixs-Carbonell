@@ -102,7 +102,7 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
 
 ## [ENTRADA 3] Semana 2 - Día 3: Práctica de TDD Estricto y Ciclo Red-Green-Refactor
 
-* **Fecha:** 24 de Julio de 2026
+* **Fecha:** 23 de Julio de 2026
 * **Contexto:** Implementación de la clase `SensorRegistry` y sus excepciones personalizadas siguiendo la regla absoluta del Desarrollo Guiado por Pruebas (TDD) para la US-01.
 * **Prompt Principal Utilizado:** *"Día 3 · Miércoles — TDD estricto... Implementa un SensorRegistry con la regla absoluta: cada commit de test precede al commit del código. Dame los pasos exactos para evidenciarlo en Git."*
 * **Uso de IA y Revisión de Código:** Utilicé a la IA para guiar el flujo operativo de Git y estructurar la inyección del código. Me proporcionó el test `test_get_unknown_sensor_raises` que forza un `ImportError` inicial (Fase RED), la implementación mínima basada en diccionarios para superarlo (Fase GREEN), y finalmente la reestructuración del código agregando el módulo `typing` de Python (Fase REFACTOR).
@@ -111,12 +111,58 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
 
   ---
 
-  ## [ENTRADA 4] Semana 2 - Día 4: Automatización de Calidad (DoD, Ruff, Mypy y Cobertura)
+    ## [ENTRADA 4] Semana 2 - Día 4: Automatización de Calidad (DoD, Ruff, Mypy y Cobertura)
 
-* **Fecha:** 25 de Julio de 2026
-* **Contexto:** Establecimiento de la *Definition of Done* y configuración de herramientas de análisis estático y cobertura (`pyproject.toml` con Ruff, Mypy y Pytest-cov) para garantizar la calidad del código de forma automatizada.
-* **Prompt Principal Utilizado:** *"Día 4 · Jueves — Definition of Done y calidad automatizada. Escribe DEFINITION_OF_DONE.md y configura pyproject.toml con reglas de ruff (E, F, I, UP, B), pytest con --cov-fail-under=80 y mypy con disallow_untyped_defs."*
-* **Uso de IA y Revisión de Código:** La IA fungió como ingeniero de DevOps, proporcionándome la checklist de calidad para el archivo `DEFINITION_OF_DONE.md` y la estructura del `pyproject.toml` con las banderas estrictas requeridas. Me indicó los comandos para instalar las dependencias necesarias (`pytest-cov`, `ruff`, `mypy`) y cómo ejecutar las auditorías en mi terminal.
-* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* La IA me indicó instalar las nuevas librerías, pero omitió guardar estos cambios en el control de dependencias. Lo corregí ejecutando de forma autónoma `pip freeze > requirements.txt`. 
-  2. *Cambio:* Al ejecutar el análisis estricto de `mypy`, el linter falló porque la IA estructuró el test inicial (del Día 3) sin tipado de retorno. Modifiqué manualmente el archivo `test_registry.py` agregando `-> None` a la función.
-  *Por qué (Criterio Técnico):* El primer cambio garantiza la reproducibilidad del entorno virtual para otros desarrolladores o para el servidor de despliegue continuo. El segundo cambio fue obligatorio para cumplir con la regla `disallow_untyped_defs = true` que definimos en el `pyproject.toml`, garantizando así que no haya "puntos ciegos" de tipado estático en el repositorio, ni siquiera en las pruebas.
+  * **Fecha:** 23 de Julio de 2026
+  * **Contexto:** Establecimiento de la *Definition of Done* y configuración de herramientas de análisis estático y cobertura (`pyproject.toml` con Ruff, Mypy y Pytest-cov) para garantizar la calidad del código de forma automatizada.
+  * **Prompt Principal Utilizado:** *"Día 4 · Jueves — Definition of Done y calidad automatizada. Escribe DEFINITION_OF_DONE.md y configura pyproject.toml con reglas de ruff (E, F, I, UP, B), pytest con --cov-fail-under=80 y mypy con disallow_untyped_defs."*
+  * **Uso de IA y Revisión de Código:** La IA fungió como ingeniero de DevOps, proporcionándome la checklist de calidad para el archivo `DEFINITION_OF_DONE.md` y la estructura del `pyproject.toml` con las banderas estrictas requeridas. Me indicó los comandos para instalar las dependencias necesarias (`pytest-cov`, `ruff`, `mypy`) y cómo ejecutar las auditorías en mi terminal.
+  * **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* La IA me indicó instalar las nuevas librerías, pero omitió guardar estos cambios en el control de dependencias. Lo corregí ejecutando de forma autónoma `pip freeze > requirements.txt`. 
+    2. *Cambio:* Al ejecutar el análisis estricto de `mypy`, el linter falló porque la IA estructuró el test inicial (del Día 3) sin tipado de retorno. Modifiqué manualmente el archivo `test_registry.py` agregando `-> None` a la función.
+    *Por qué (Criterio Técnico):* El primer cambio garantiza la reproducibilidad del entorno virtual para otros desarrolladores o para el servidor de despliegue continuo. El segundo cambio fue obligatorio para cumplir con la regla `disallow_untyped_defs = true` que definimos en el `pyproject.toml`, garantizando así que no haya "puntos ciegos" de tipado estático en el repositorio, ni siquiera en las pruebas.
+
+    ---
+
+    ## [ENTRADA 5] Semana 2 - Día 5: Gestión Ágil (Product Backlog y Sprint Planning)
+* **Fecha:** 24 de Julio de 2026
+* **Contexto:** Construcción de la documentación ágil requerida para el proyecto: Product Backlog completo (10 User Stories) priorizado mediante MoSCoW, y la definición del Sprint 1 Planning con estimaciones.
+* **Prompt Principal Utilizado:** *"Genera las 6 Historias de Usuario faltantes (US-05 a US-10) con priorización MoSCoW, Story Points y formato Gherkin para completar el Product Backlog. Luego redacta el Sprint 1 Planning."*
+* **Uso de IA y Revisión de Código:** La IA actuó como *Scrum Master*, redactando los escenarios Gherkin (Given/When/Then) con gran precisión, incluyendo casos estadísticos y de integración para la calificación de Distinción. También generó el documento de planificación estructurando las tareas a $\le 4\text{ h}$.
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* La IA generó las nuevas historias con un formato basado en listas de Markdown, pero mis primeras 4 historias tenían un formato distinto. Modifiqué y reestructuré manualmente las US-01 a US-04 para unificarlas con el nuevo estándar.
+  *Por qué (Criterio Técnico):* En la documentación de ingeniería, la consistencia visual es crucial. Un Backlog dispar denota falta de revisión humana.
+  2. *Cambio:* Detecté que la IA intentó saltarse la US-03 (Humedad) y pasar directamente a la US-05. Detuve la generación y le exigí regresar al orden del Sprint Backlog.
+  *Por qué (Criterio Técnico):* Para proteger el *Sprint Goal*. Como desarrollador responsable, no puedo implementar infraestructura secundaria (alertas) si el núcleo del motor de reglas (evaluar humedad) está incompleto.
+
+---
+
+## [ENTRADA 6] Semana 2 - Día 5: TDD, Lógica de Negocio y Patrón Strategy
+* **Fecha:** 24 de Julio de 2026
+* **Contexto:** Implementación en ciclo TDD (Red-Green-Refactor) del detector de humedad (US-03) y del Gestor de Alertas (US-05 y US-06) aplicando el patrón de diseño *Strategy* para separar la lógica de la infraestructura (Consola vs. Archivos).
+* **Prompt Principal Utilizado:** *"Implementa las pruebas y el código para el AlertManager usando el patrón Strategy (ConsoleAlertStrategy y FileAlertStrategy) utilizando TDD estricto."*
+* **Uso de IA y Revisión de Código:** La IA proporcionó excelentes implementaciones de *Mocks* en Pytest, sugiriendo el uso de los fixtures `capsys` para capturar la salida de consola y `tmp_path` para el manejo seguro de archivos temporales de prueba.
+* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Al mover los archivos a `semana02/eval1/`, los tests fallaron con `ModuleNotFoundError`. La IA sugirió una solución a medias. Intervine modificando el archivo `pyproject.toml` para agregar `pythonpath = ["semana02/eval1"]`.
+  *Por qué (Criterio Técnico):* Modificar el `PYTHONPATH` en la configuración global es la forma moderna y escalable de resolver rutas en Python, en lugar de depender de scripts frágiles o alterar la estructura de carpetas.
+
+---
+
+## [ENTRADA 7] Semana 2 - Día 6: Simulador Gaussiano y Pruebas de Integración (Distinción)
+* **Fecha:** 24 de Julio de 2026
+* **Contexto:** Desarrollo de las características de extensión: Un `SensorSimulator` basado en probabilidad estocástica y la integración del sistema mediante el script `main.py` probando carga (10 sensores, 60 iteraciones).
+* **Prompt Principal Utilizado:** *"Desarrolla el test y la clase SensorSimulator usando distribución gaussiana. Después, crea test_integration.py y main.py para orquestar los 4 módulos corriendo 600 lecturas."*
+* **Uso de IA y Revisión de Código:** La IA fue clave para diseñar el test estadístico, utilizando la Regla Empírica para validar que el ~95% de los datos generados por `random.gauss()` cayeran dentro de $\pm 2\sigma$.
+* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Durante la ejecución del orquestador, el sistema arrojó un error porque al `SensorRegistry` le faltaba el método `add_reading`. Apliqué un *Hotfix* autónomo, agregando el método a `registry.py` y corrigiendo la firma de `get` a `get_sensor` en las pruebas unitarias.
+  *Por qué (Criterio Técnico):* Este es un escenario clásico donde las pruebas unitarias pasan, pero la integración falla. El hotfix era estrictamente necesario para acoplar las interfaces de los distintos módulos y garantizar que el pipeline completo procesara las 600 lecturas.
+
+---
+
+## [ENTRADA 8] Semana 2 - Día 6: Arquitectura C4, Linter y Cierre del Release
+* **Fecha:** 24 de Julio de 2026
+* **Contexto:** Generación del diagrama de arquitectura C4 (Contenedores), redacción de la Retrospectiva del Sprint y la fusión final de la rama de desarrollo hacia `main` (Producción).
+* **Prompt Principal Utilizado:** *"Redacta la Retrospectiva del Sprint y genera el código Mermaid para el Diagrama C4 Nivel 2 que incluya el File System."*
+* **Uso de IA y Revisión de Código:** La IA sintetizó excelentemente el documento de Retrospectiva y proporcionó la base del código visual Mermaid para el mapeo de arquitectura.
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* El código Mermaid original usaba directivas C4Container que rompían la vista previa nativa de VS Code. Lo reescribí manualmente usando `flowchart TD` y clases CSS genéricas.
+  *Por qué (Criterio Técnico):* Un documento técnico debe ser compatible y renderizable en los entornos de trabajo del equipo. Forzar la sintaxis estándar de flujo garantiza soporte universal.
+  2. *Cambio:* Apliqué un parche final antes del merge porque Ruff detectó un error `E501 Line too long (92 > 88)` en un comentario de `test_integration.py`. Dividí la línea manualmente.
+  *Por qué (Criterio Técnico):* La calidad del código no es negociable. Romper un comentario en dos líneas permite mantener la configuración estricta de Ruff ("All checks passed") que establecimos en nuestro Definition of Done.
