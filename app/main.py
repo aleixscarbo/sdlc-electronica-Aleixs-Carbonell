@@ -1,5 +1,11 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
+# --- NUEVOS IMPORTS PARA LA BASE DE DATOS ---
+from app.db import engine, Base
+from app.models import ReadingModel  # Importamos los modelos para que SQLAlchemy sepa qué tablas crear
+
+# Formatear la memoria: Crea el archivo .db y las tablas si no existen
+Base.metadata.create_all(bind=engine)
 
 # Inicialización del sistema
 app = FastAPI(title="SensorHub API", version="0.1.0")
