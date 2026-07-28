@@ -166,3 +166,14 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
   *Por qué (Criterio Técnico):* Un documento técnico debe ser compatible y renderizable en los entornos de trabajo del equipo. Forzar la sintaxis estándar de flujo garantiza soporte universal.
   2. *Cambio:* Apliqué un parche final antes del merge porque Ruff detectó un error `E501 Line too long (92 > 88)` en un comentario de `test_integration.py`. Dividí la línea manualmente.
   *Por qué (Criterio Técnico):* La calidad del código no es negociable. Romper un comentario en dos líneas permite mantener la configuración estricta de Ruff ("All checks passed") que establecimos en nuestro Definition of Done.
+
+---
+
+## [ENTRADA 1] Semana 3 - Día 1: API REST base y validación estricta con Pydantic
+* **Fecha:** 28 de Julio de 2026
+* **Contexto:** Inicialización de la API REST base para SensorHub utilizando FastAPI. Pruebas de inyección de datos erróneos (tipos incorrectos) en el endpoint de lecturas (POST `/readings`) a través de la interfaz autogenerada de Swagger UI.
+* **Prompt Principal Utilizado:** *"dentro de http://127.0.0.1:8000/docs: si le doy en execute con 'value': hola... me da Error 422 Unprocessable Content... analiza esto y dime debaria generar una entrada significativa."*
+* **Uso de IA y Revisión de Código:** La IA me ayudó a auditar la respuesta HTTP 422 y tradujo el comportamiento del framework: Pydantic actuó como un optoacoplador o fusible en el pin de entrada, interceptando el string ("hola") en lugar del float esperado, protegiendo así la capa de lógica interna de un colapso.
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Purgué manualmente el archivo `requirements.txt`, borrando todas las dependencias transitivas (como `starlette`, `pydantic_core`, `h11`) creadas por el comando `pip freeze`, dejando únicamente las herramientas explícitas de nivel superior (`fastapi`, `uvicorn`, `pytest`, `ruff`, `mypy`).
+  *Por qué (Criterio Técnico):* Mantener una lista de materiales (BOM) limpia y estricta es vital para la etapa de DevOps (Docker/Render). Evita "cortocircuitos" por conflictos de versiones en sub-dependencias, asegurando que el servidor en producción sea 100% determinista y fácil de auditar.
