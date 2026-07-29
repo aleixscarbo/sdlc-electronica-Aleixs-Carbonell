@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
+
 # --- NUEVOS IMPORTS PARA LA BASE DE DATOS ---
-from app.db import engine, Base
-from app.models import ReadingModel  # Importamos los modelos para que SQLAlchemy sepa qué tablas crear
+from app.db import Base, engine
 
 # Formatear la memoria: Crea el archivo .db y las tablas si no existen
 Base.metadata.create_all(bind=engine)

@@ -1,8 +1,11 @@
 #Creamos el modelo de lectura, tal como lo indican las instrucciones
 
 from datetime import datetime
+
 from sqlalchemy.orm import Mapped, mapped_column
+
 from app.db import Base
+
 
 class ReadingModel(Base):
     __tablename__ = "readings"
