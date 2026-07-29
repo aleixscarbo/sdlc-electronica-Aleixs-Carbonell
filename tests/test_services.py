@@ -1,16 +1,19 @@
 import pytest
+
 from app.models import ReadingModel
 from app.services.readings import ReadingService
 
+
 class FakeRepository:
     """Implementación falsa (en RAM) para aislar las pruebas de la Base de Datos."""
-    def __init__(self):
+    def __init__(self)-> None:  
         self.readings: list[ReadingModel] = []
         self.next_id = 1
 
     def add(self, sensor_id: str, value: float, unit: str) -> ReadingModel:
         # Usamos el modelo ORM directamente en RAM sin conectarlo a SQL
-        reading = ReadingModel(id=self.next_id, sensor_id=sensor_id, value=value, unit=unit)
+        reading = ReadingModel(id=self.next_id, sensor_id=sensor_id, 
+                               value=value, unit=unit)
         self.readings.append(reading)
         self.next_id += 1
         return reading
@@ -20,7 +23,7 @@ class FakeRepository:
 
 # --- PRUEBAS DEL OSCILOSCOPIO ---
 
-def test_record_reading_success():
+def test_record_reading_success() -> None:
     # Arrange: Conectamos el circuito falso al servicio
     fake_repo = FakeRepository()
     service = ReadingService(repo=fake_repo)
@@ -33,7 +36,7 @@ def test_record_reading_success():
     assert result.value == 25.0
     assert len(fake_repo.readings) == 1
 
-def test_record_reading_below_absolute_zero_raises_error():
+def test_record_reading_below_absolute_zero_raises_error() -> None:
     # Arrange
     fake_repo = FakeRepository()
     service = ReadingService(repo=fake_repo)
