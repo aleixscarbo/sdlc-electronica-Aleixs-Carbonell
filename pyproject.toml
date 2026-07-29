@@ -1,6 +1,8 @@
 [tool.pytest.ini_options]
-pythonpath = ["semana02/eval1"]
-addopts = "--cov=semana02/eval1 --cov-fail-under=80 -v"
+addopts = "--cov=app --cov-report=term-missing --cov-fail-under=80"
+testpaths = [
+    "tests",
+]
 
 [tool.mypy]
 disallow_untyped_defs = true
@@ -16,4 +18,10 @@ select = [
     "I",  # isort (ordenamiento de imports)
     "UP", # pyupgrade (sintaxis moderna)
     "B"   # flake8-bugbear (detecta posibles bugs)
+]
+
+[tool.coverage.run]
+omit = [
+    "app/main.py",
+    "app/db.py",
 ]

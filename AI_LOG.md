@@ -169,7 +169,7 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
 
 ---
 
-## [ENTRADA 1] Semana 3 - Día 1: API REST base y validación estricta con Pydantic
+## [ENTRADA 9] Semana 3 - Día 1: API REST base y validación estricta con Pydantic
 * **Fecha:** 28 de Julio de 2026
 * **Contexto:** Inicialización de la API REST base para SensorHub utilizando FastAPI. Pruebas de inyección de datos erróneos (tipos incorrectos) en el endpoint de lecturas (POST `/readings`) a través de la interfaz autogenerada de Swagger UI.
 * **Prompt Principal Utilizado:** *"dentro de http://127.0.0.1:8000/docs: si le doy en execute con 'value': hola... me da Error 422 Unprocessable Content... analiza esto y dime debaria generar una entrada significativa."*
@@ -177,3 +177,25 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
 * **Lo que cambié respecto a lo generado y el porqué:**
   1. *Cambio:* Purgué manualmente el archivo `requirements.txt`, borrando todas las dependencias transitivas (como `starlette`, `pydantic_core`, `h11`) creadas por el comando `pip freeze`, dejando únicamente las herramientas explícitas de nivel superior (`fastapi`, `uvicorn`, `pytest`, `ruff`, `mypy`).
   *Por qué (Criterio Técnico):* Mantener una lista de materiales (BOM) limpia y estricta es vital para la etapa de DevOps (Docker/Render). Evita "cortocircuitos" por conflictos de versiones en sub-dependencias, asegurando que el servidor en producción sea 100% determinista y fácil de auditar.
+
+---
+
+## [ENTRADA 10] Semana 3 - Día 2: Aislamiento de Base de Datos y Cirugía en Git
+* **Fecha:** 28 de Julio de 2026
+* **Contexto:** Durante la integración de SQLAlchemy en SensorHub, un error en la terminal sobreescribió el archivo `.gitignore` base. Esto provocó que archivos binarios compilados (`__pycache__`) y la memoria física local de la base de datos (`sensorhub.db`) se colaran en el "área de preparación" y viajaran a GitHub en el último commit.
+* **Prompt Principal Utilizado:** *"por que todos estos archivos se subieron a commit, me imagino que esta mal, porque ahora mi archivo gitignore antes se veia asi... como borro el ultimo commit, ya que le hice git push..."*
+* **Uso de IA y Revisión de Código:** La IA diagnosticó el "cortocircuito" en el control de versiones y me asistió proporcionando un protocolo de recuperación. Usamos `git reset --soft HEAD~1` para retroceder el tiempo sin borrar el código físico, limpiamos el índice con `restore --staged` y aplicamos `--force-with-lease` para reescribir el historial remoto.
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Restauré manualmente la plantilla completa de 218 líneas del `.gitignore` original de Python/FastAPI, y le anexé de forma segura las reglas de exclusión de bases de datos (`*.db`, `*.sqlite3`) en lugar de dejar un archivo genérico o vacío.
+  *Por qué (Criterio Técnico):* Una base de datos local nunca debe rastrearse en Git. Subirla expone datos sensibles y corrompe los despliegues en producción (generando conflictos de binarios). Dominar la reescritura del historial (Amnesia Histórica en Git) es vital para auditar y limpiar la placa de "soldadura derramada" antes de fusionar cualquier código a la rama principal (`main`).
+
+---
+
+## [ENTRADA 11] Semana 3 - Día 3: Inversión de Dependencias y Configuración de Cobertura
+* **Fecha:** 29 de Julio de 2026
+* **Contexto:** Implementación del patrón Repositorio y la capa de Servicios para la API de SensorHub. Se escribió un simulador en RAM (`FakeRepository`) para probar la lógica de negocio aislada. Depuración exhaustiva de la herramienta de cobertura (`pytest-cov`).
+* **Prompt Principal Utilizado:** *"despues de corregir el project.toml, obtuve... ERROR: Coverage failure: total of 63 is less than fail-under=80"*
+* **Uso de IA y Revisión de Código:** La IA fungió como herramienta de diagnóstico (troubleshooting). Primero identificó un error de sintaxis en `pyproject.toml` (argumento no reconocido `--app` en lugar de `--cov=app`). Luego analizó el reporte del 63% de cobertura y determinó que la lógica pura estaba al 100%, pero la herramienta estaba midiendo archivos de infraestructura sin pruebas (`main.py` y `db.py`).
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Además de implementar el servicio y el repositorio falso, añadí manualmente un bloque `[tool.coverage.run]` en el `pyproject.toml` con la directiva `omit` para ignorar los archivos `app/main.py` y `app/db.py`.
+  *Por qué (Criterio Técnico):* En una Arquitectura Limpia, el dominio (servicio) se somete a pruebas unitarias rigurosas, mientras que el cableado de la placa (`main.py`/HTTP) y la conexión de la memoria (`db.py`) requieren pruebas de integración. Excluir estos últimos archivos de las pruebas unitarias evita que la métrica de cobertura caiga injustamente (falsos negativos), permitiendo que el pipeline de Integración Continua (CI) pase a verde asegurando que el 100% de la lógica de negocio central está auditada.
