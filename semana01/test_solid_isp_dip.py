@@ -1,7 +1,11 @@
 from semana01.solid_isp_dip import (
-    SimpleTempSensor, SmartThermostat, 
-    DataProcessor, InMemoryRepository, SensorReading
+    DataProcessor,
+    InMemoryRepository,
+    SensorReading,
+    SimpleTempSensor,
+    SmartThermostat,
 )
+
 
 # --- PRUEBAS ISP ---
 def test_isp_simple_sensor():

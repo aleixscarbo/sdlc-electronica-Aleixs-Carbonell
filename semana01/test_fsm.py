@@ -1,5 +1,6 @@
 from semana01.fsm_demo import TrafficLightFSM, TrafficLightState
 
+
 def test_initial_state():
     # Arrange: Preparamos la FSM
     fsm = TrafficLightFSM()

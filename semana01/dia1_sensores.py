@@ -3,6 +3,7 @@ from dataclasses import dataclass, replace
 from enum import Enum, auto
 from typing import Protocol
 
+
 # 1. Definición de Tipos (Enums)
 class SensorType(Enum):
     TEMPERATURE = auto()

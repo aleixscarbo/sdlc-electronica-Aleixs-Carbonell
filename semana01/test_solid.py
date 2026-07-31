@@ -1,9 +1,18 @@
 import pytest
+
 from semana01.solid_srp_ocp_lsp import (
-    SensorReader, DataLogger, SensorReading,
-    ConsoleAlert, FileAlert, AnomalyDetector,
-    TemperatureSensor, HumiditySensor, ViolacionLSP, process_sensor
+    AnomalyDetector,
+    ConsoleAlert,
+    DataLogger,
+    FileAlert,
+    HumiditySensor,
+    SensorReader,
+    SensorReading,
+    TemperatureSensor,
+    ViolacionLSP,
+    process_sensor,
 )
+
 
 # --- PRUEBAS SRP ---
 def test_srp_reader_responsibility():

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class MessageParser(ABC):
     """(ISP & OCP) Interfaz segregada para parseo de protocolos."""
     @abstractmethod

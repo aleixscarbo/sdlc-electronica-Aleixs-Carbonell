@@ -1,10 +1,13 @@
-import pytest
 import json
 from dataclasses import FrozenInstanceError
+
+import pytest
+
 from semana01.uart_driver.config import UartConfig
-from semana01.uart_driver.parsers import ModbusParser, NMEAParser, CANParser
 from semana01.uart_driver.device import UartDevice
+from semana01.uart_driver.parsers import CANParser, ModbusParser, NMEAParser
 from semana01.uart_driver.recorder import DataRecorder
+
 
 # ==========================================
 # TESTS PARA UartConfig (Inmutabilidad y SRP)
@@ -93,7 +96,7 @@ def test_recorder_writes_valid_json(tmp_path):
     recorder = DataRecorder(str(file))
     recorder.record({"sensor": "TMP", "val": 25.5})
     
-    with open(file, "r") as f:
+    with open(file) as f:
         line = f.readline()
         data = json.loads(line)
         assert data["sensor"] == "TMP"
@@ -105,6 +108,6 @@ def test_recorder_appends_data(tmp_path):
     recorder.record({"id": 1})
     recorder.record({"id": 2})
     
-    with open(file, "r") as f:
+    with open(file) as f:
         lines = f.readlines()
         assert len(lines) == 2
