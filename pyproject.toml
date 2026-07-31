@@ -21,8 +21,3 @@ select = [
 ]
 
 [tool.coverage.run]
-omit = [
-    "app/main.py",
-    "app/db.py",
-    "app/repositories/sql.py",
-]
