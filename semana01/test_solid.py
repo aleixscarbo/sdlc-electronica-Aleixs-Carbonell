@@ -15,7 +15,7 @@ from semana01.solid_srp_ocp_lsp import (
 
 
 # --- PRUEBAS SRP ---
-def test_srp_reader_responsibility():
+def test_srp_reader_responsibility() -> None:
     # Arrange
     reader = SensorReader("SNS-01")
     # Act
@@ -24,7 +24,7 @@ def test_srp_reader_responsibility():
     assert reading.sensor_id == "SNS-01"
     assert reading.value == 25.0
 
-def test_srp_logger_responsibility():
+def test_srp_logger_responsibility() -> None:
     # Arrange
     logger = DataLogger()
     reading = SensorReading("SNS-01", 30.0)
@@ -35,7 +35,7 @@ def test_srp_logger_responsibility():
 
 
 # --- PRUEBAS OCP ---
-def test_ocp_console_alert_strategy():
+def test_ocp_console_alert_strategy() -> None:
     # Arrange
     detector = AnomalyDetector(ConsoleAlert(), threshold=40.0)
     reading = SensorReading("SNS-TEMP", 45.0)
@@ -44,7 +44,7 @@ def test_ocp_console_alert_strategy():
     # Assert
     assert result == "Console: Anomalia en SNS-TEMP"
 
-def test_ocp_file_alert_strategy():
+def test_ocp_file_alert_strategy() -> None:
     # Arrange
     detector = AnomalyDetector(FileAlert(), threshold=40.0)
     reading = SensorReading("SNS-HUM", 50.0)
@@ -55,7 +55,7 @@ def test_ocp_file_alert_strategy():
 
 
 # --- PRUEBAS LSP ---
-def test_lsp_interchangeable_sensors():
+def test_lsp_interchangeable_sensors() -> None:
     # Arrange
     t_sensor = TemperatureSensor()
     h_sensor = HumiditySensor()
@@ -63,7 +63,7 @@ def test_lsp_interchangeable_sensors():
     assert process_sensor(t_sensor) == 36.5
     assert process_sensor(h_sensor) == 60.2
 
-def test_lsp_breakage_demonstration():
+def test_lsp_breakage_demonstration() -> None:
     # Arrange
     broken_sensor = ViolacionLSP()
     # Act & Assert: Demuestra cómo la violación rompe la ejecución genérica

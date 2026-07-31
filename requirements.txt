@@ -12,6 +12,6 @@ pytest-cov==7.1.0
 ruff==0.15.21
 mypy==2.2.0
 
-# --- Persistencia de Datos (Pendiente para el Día 3) ---
+# --- Persistencia de Datos ---
 SQLAlchemy==2.0.51
 alembic==1.18.5

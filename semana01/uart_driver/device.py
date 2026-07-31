@@ -46,7 +46,8 @@ class UartDevice:
                 return {}
             raw_data = self._buffer.popleft()
 
-        # (OCP/LSP) Iteramos sobre las abstracciones, sin importar cuántos protocolos existan
+        # (OCP/LSP) Iteramos sobre las abstracciones, 
+        # sin importar cuántos protocolos existan
         for parser in self.parsers:
             if parser.can_parse(raw_data):
                 return parser.parse(raw_data)

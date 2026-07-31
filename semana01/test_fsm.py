@@ -1,7 +1,7 @@
 from semana01.fsm_demo import TrafficLightFSM, TrafficLightState
 
 
-def test_initial_state():
+def test_initial_state() -> None:
     # Arrange: Preparamos la FSM
     fsm = TrafficLightFSM()
     
@@ -11,7 +11,7 @@ def test_initial_state():
     # Assert: Comprobamos que arranque en ROJO
     assert current_state == TrafficLightState.RED
 
-def test_transition_red_to_green():
+def test_transition_red_to_green() -> None:
     # Arrange
     fsm = TrafficLightFSM()
     
@@ -22,7 +22,7 @@ def test_transition_red_to_green():
     assert new_state == TrafficLightState.GREEN
     assert fsm.state == TrafficLightState.GREEN
 
-def test_full_cycle_returns_to_red():
+def test_full_cycle_returns_to_red() -> None:
     # Arrange
     fsm = TrafficLightFSM()
     
@@ -34,7 +34,7 @@ def test_full_cycle_returns_to_red():
     # Assert: Comprobamos que el ciclo se cerró correctamente
     assert fsm.state == TrafficLightState.RED
 
-def test_cycle_count():
+def test_cycle_count() -> None:
     # Arrange
     fsm = TrafficLightFSM()
     
