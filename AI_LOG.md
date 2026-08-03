@@ -230,3 +230,16 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
   *Por qué (Criterio Técnico):* En la Semana 3 pasamos de pruebas unitarias aisladas (con repositorios *fake* en memoria) a **Pruebas de Integración (End-to-End)** que auditan el comportamiento completo del sistema (routers, servicios, base de datos SQLite y validaciones de Pydantic). Esto nos permitió eliminar restricciones de exclusión en la cobertura y auditar con precisión de producción el sistema real.
   2. *Cambio:* Creé el módulo `app/dependencies.py` para alojar la fábrica de sesiones y servicios (`get_sensor_hub_service`).
   *Por qué (Criterio Técnico):* Al estructurar una arquitectura limpia en 4 capas con múltiples *routers*, las referencias cruzadas entre `main.py` y los enrutadores provocaban un cortocircuito lógico (*Circular Import*). Aislar la fuente de alimentación de dependencias permite un acoplamiento desacoplado y modular, siguiendo los estándares de diseño de software empresarial.
+
+---
+
+## [ENTRADA 14] Semana 3 - Día 6: Revisión por Pares (Code Review) Estricta y Refactorización
+* **Fecha:** 2 de Agosto de 2026
+* **Contexto:** Realización del ciclo de *Peer Review* cruzado. Inicialmente se había aprobado y fusionado el código, pero al recibir el Checklist oficial de 10 puntos, se ejecutó un `git reset --hard` para revertir el merge y adherirse estrictamente al estándar. Se auditó la API de mi compañero y se refactorizó mi propia API en base a su retroalimentación.
+* **Prompt Principal Utilizado:** *"Estoy haciendo un Code Review de la Semana 3 de mi compañero Julián. Quiero que actúes como un Arquitecto Backend Senior y audites este código basándote en el Checklist oficial..."* y *"Ahora te daré la observación que mi compañero realizó a mi PR... dame los pasos para aplicar los cambios en mi código local"*.
+* **Uso de IA y Revisión de Código:** Utilicé a la IA como copiloto para clonar y auditar localmente el código del compañero. La IA detectó una falla silenciosa pero crítica de integridad relacional (falta de `ForeignKey` en los modelos) y acoplamiento del protocolo HTTP en la capa de servicios. Además, utilicé la IA para estructurar respuestas profesionales en Markdown justificando decisiones de diseño (complejidad algorítmica $O(N)$ vs $O(\log N)$ al usar índices).
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Agregué explícitamente `index=True` a la columna `sensor_id` en SQLAlchemy.
+  *Por qué (Criterio Técnico):* Para evitar *Full Table Scans* cuando el endpoint `GET` filtre lecturas por sensor, reduciendo la complejidad de búsqueda a $O(\log N)$ mediante un B-Tree.
+  2. *Cambio:* Extraje la validación termodinámica (cero absoluto y unidades) a una clase base `ReadingBase` en Pydantic.
+  *Por qué (Criterio Técnico):* En la versión anterior, el endpoint `PATCH` (que usaba un esquema sin validadores) permitía evadir las leyes de la física. Al usar herencia, garantizo que cualquier mutación de datos (creación o actualización parcial) pase por los fusibles lógicos antes de tocar la base de datos.

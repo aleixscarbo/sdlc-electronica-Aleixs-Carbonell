@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Float, ForeignKey, String, func
+from sqlalchemy import DateTime, Float, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -23,10 +23,13 @@ class ReadingModel(Base):
     __tablename__ = "readings"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    sensor_id: Mapped[str] = mapped_column(ForeignKey("sensors.id"))
+    # CAMBIO 1: Agregamos index=True a sensor_id para consultas rápidas
+    sensor_id: Mapped[str] = mapped_column(ForeignKey("sensors.id"), index=True)
     value: Mapped[float] = mapped_column(Float)
     unit: Mapped[str] = mapped_column(String(10))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+    # CAMBIO 2: Forzamos la zona horaria UTC explícitamente con lambda
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relación: Una lectura pertenece a un sensor
     sensor: Mapped["SensorModel"] = relationship(back_populates="readings")
