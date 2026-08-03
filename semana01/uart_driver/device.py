@@ -1,14 +1,15 @@
 import threading
 from collections import deque
-from typing import List, Dict, Union
+
 from .config import UartConfig
 from .parsers import MessageParser
+
 
 class UartDevice:
     """
     (DIP) Depende de abstracciones (MessageParser), no de implementaciones concretas.
     """
-    def __init__(self, config: UartConfig, parsers: List[MessageParser]) -> None:
+    def __init__(self, config: UartConfig, parsers: list[MessageParser]) -> None:
         self.config = config
         self.parsers = parsers
         self._connected = False
@@ -34,7 +35,7 @@ class UartDevice:
         with self._lock:
             self._buffer.append(data)
 
-    def read_and_parse(self) -> Dict[str, Union[str, float]]:
+    def read_and_parse(self) -> dict[str, str | float]:
         """Extrae el mensaje del buffer y lo delega al parser adecuado."""
         if not self._connected:
             raise RuntimeError("Dispositivo desconectado: no se puede leer.")
@@ -45,7 +46,8 @@ class UartDevice:
                 return {}
             raw_data = self._buffer.popleft()
 
-        # (OCP/LSP) Iteramos sobre las abstracciones, sin importar cuántos protocolos existan
+        # (OCP/LSP) Iteramos sobre las abstracciones, 
+        # sin importar cuántos protocolos existan
         for parser in self.parsers:
             if parser.can_parse(raw_data):
                 return parser.parse(raw_data)

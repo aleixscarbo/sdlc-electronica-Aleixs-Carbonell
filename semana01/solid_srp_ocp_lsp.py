@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+
 @dataclass(frozen=True)
 class SensorReading:
     sensor_id: str
@@ -10,7 +11,8 @@ class SensorReading:
 # 1. PRINCIPIO DE RESPONSABILIDAD ÚNICA (SRP)
 # =====================================================================
 
-# ❌ MAL: Esta clase lee hardware virtual Y además guarda en archivos (Dos responsabilidades)
+# ❌ MAL: Esta clase lee hardware virtual Y además guarda en archivos (
+# Dos responsabilidades)
 class ViolacionSRP:
     def __init__(self, sensor_id: str) -> None:
         self.sensor_id = sensor_id
@@ -42,7 +44,8 @@ class DataLogger:
 # 2. PRINCIPIO DE ABIERTO/CERRADO (OCP)
 # =====================================================================
 
-# ❌ MAL: Si queremos agregar alertas por Email, tenemos que modificar esta clase (rompe OCP)
+# ❌ MAL: Si queremos agregar alertas por Email, 
+# tenemos que modificar esta clase (rompe OCP)
 class ViolacionOCP:
     def __init__(self, alert_type: str, threshold: float) -> None:
         self.alert_type = alert_type
@@ -88,7 +91,8 @@ class BaseSensor(ABC):
     @abstractmethod
     def read(self) -> float: ...
 
-# ❌ MAL: Modifica radicalmente el comportamiento esperado lanzando una excepción inesperada
+# ❌ MAL: Modifica radicalmente el comportamiento 
+# esperado lanzando una excepción inesperada
 class ViolacionLSP(BaseSensor):
     def read(self) -> float:
         # Provoca un crash si el sistema intenta leerlo de forma genérica

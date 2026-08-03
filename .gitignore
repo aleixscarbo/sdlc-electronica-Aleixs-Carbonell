@@ -216,3 +216,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- SensorHub Base de Datos Local ---
+*.db
+*.sqlite
+*.sqlite3

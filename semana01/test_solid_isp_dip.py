@@ -1,10 +1,14 @@
 from semana01.solid_isp_dip import (
-    SimpleTempSensor, SmartThermostat, 
-    DataProcessor, InMemoryRepository, SensorReading
+    DataProcessor,
+    InMemoryRepository,
+    SensorReading,
+    SimpleTempSensor,
+    SmartThermostat,
 )
 
+
 # --- PRUEBAS ISP ---
-def test_isp_simple_sensor():
+def test_isp_simple_sensor() -> None:
     # Arrange
     sensor = SimpleTempSensor()
     # Act
@@ -12,7 +16,7 @@ def test_isp_simple_sensor():
     # Assert: El sensor funciona sin verse obligado a implementar calibrate()
     assert val == 22.5
 
-def test_isp_smart_thermostat():
+def test_isp_smart_thermostat() -> None:
     # Arrange
     thermostat = SmartThermostat()
     # Act
@@ -22,7 +26,7 @@ def test_isp_smart_thermostat():
     assert thermostat.read() == 0.0
 
 # --- PRUEBAS DIP ---
-def test_dip_processor_with_in_memory_repo():
+def test_dip_processor_with_in_memory_repo() -> None:
     # Arrange
     # ¡Inyectamos la dependencia falsa! El procesador no sabe que es en memoria RAM.
     test_repo = InMemoryRepository()

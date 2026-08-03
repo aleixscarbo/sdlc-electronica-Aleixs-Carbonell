@@ -73,7 +73,8 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
 * **Contexto:** Reimplementación de un driver UART de C embebido a Python moderno aplicando todos los principios SOLID y concurrencia.
 * **Prompt Principal Utilizado:** *"Día 5 · Viernes — Ejercicio integrador: 'El Driver Modernizado'... Uso de IA: escribe la firma del test y el docstring; deja que Copilot sugiera la implementación; revisa línea por línea."*
 * **Uso de IA y Revisión de Código:** Utilicé la IA generativa como Copiloto. Le proporcioné las firmas de los tests y los *docstrings* (ej. `def test_device_full_flow(): """Prueba de integración: Conexión -> RX -> Parseo."""`). La IA sugirió las aserciones basadas en mis clases. 
-* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Agregué el decorador `@pytest.fixture` para aislar el setup del `UartDevice`. La IA inicialmente sugería instanciar el dispositivo manualmente dentro de cada uno de los 3 tests del device.
+* **Lo que cambié respecto a lo generado y el porqué:** 
+  1. *Cambio:* Agregué el decorador `@pytest.fixture` para aislar el setup del `UartDevice`. La IA inicialmente sugería instanciar el dispositivo manualmente dentro de cada uno de los 3 tests del device.
   2. *Por qué (Reflexión SOLID & TDD):* Al usar Fixtures centralizamos el "Arrange" del patrón AAA, respetando el principio DRY (Don't Repeat Yourself) y logrando inyectar las dependencias (DIP) de la configuración y de los 3 parsers (incluyendo el parser CAN de extensión) de manera limpia y modular en cada test.
 
   ---
@@ -84,7 +85,8 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
 * **Contexto:** Estudio de la Scrum Guide 2020, comprensión de roles, eventos, artefactos y el establecimiento inicial del espacio de trabajo ágil en GitHub Projects para la Evaluación 1 del sistema IoT.
 * **Prompt Principal Utilizado:** *"Ayúdame a sintetizar la Scrum Guide 2020 conectando los conceptos de roles, eventos, artefactos y Definition of Done con la transición de un ingeniero electrónico a software backend, y dame los pasos para estructurar un tablero Kanban con 5 columnas en GitHub Projects."*
 * **Uso de IA y Revisión de Código:** Utilicé a la IA como copiloto de arquitectura de procesos para organizar de forma estructurada los conceptos teóricos de Scrum. La IA propuso una tabla de equivalencias y la organización del tablero. Revisé la propuesta línea por línea contrastándola directamente con los principios rectores de la guía oficial de Scrum 2020 para evitar desviaciones conceptuales.
-* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Ajusté los timeboxes propuestos originalmente por la IA para que no reflejaran los plazos mensuales estándar de Scrum, sino una escala adaptada a nuestro ciclo operativo semanal de desarrollo. 
+* **Lo que cambié respecto a lo generado y el porqué:** 
+  1. *Cambio:* Ajusté los timeboxes propuestos originalmente por la IA para que no reflejaran los plazos mensuales estándar de Scrum, sino una escala adaptada a nuestro ciclo operativo semanal de desarrollo. 
   2. *Por qué (Reflexión Ágil):* Un Sprint de un mes no es viable para una habilitación intensiva basada en entregas semanales; adaptar los bloques de tiempo (Sprint Planning, Review, Retrospective) a un ciclo de 7 días mantiene el ritmo del SDLC ágil sin perder la disciplina de inspección y adaptación.
 
 ---
@@ -95,7 +97,8 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
 * **Contexto:** Definición del Product Backlog para el sistema de monitoreo IoT (Evaluación 1). Creación de Historias de Usuario con escenarios Gherkin y estimación mediante Story Points (Fibonacci).
 * **Prompt Principal Utilizado:** *"He redactado la US-02 para detectar anomalías de temperatura (> 35 °C). Por favor audita mis escenarios Gherkin: ¿Son verificables? ¿Son ambiguos? ¿Qué caso borde me está faltando? Actúa como un QA Engineer estricto."*
 * **Uso de IA y Revisión de Código:** Utilicé a la IA no para escribir la historia desde cero, sino como par revisor (QA/Testing) para validar la robustez de mi lógica. La IA confirmó que los escenarios iniciales eran verificables, pero detectó una carencia crítica: no estaba probando qué ocurre si los datos del sensor llegan corruptos (ej. temperatura en valor `None` o valores extremos ilógicos como `-1000 °C` debido a un corto circuito en el termistor).
-* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Decidí no incluir la verificación de "cortocircuito del termistor" en la US-02 de Lógica de Negocio, sino delegar la validación de tipos y formatos a la US-01 (Ingesta de Lectura). 
+* **Lo que cambié respecto a lo generado y el porqué:** 
+  1. *Cambio:* Decidí no incluir la verificación de "cortocircuito del termistor" en la US-02 de Lógica de Negocio, sino delegar la validación de tipos y formatos a la US-01 (Ingesta de Lectura). 
   2. *Por qué (Reflexión SOLID & SRP):* Por el Principio de Responsabilidad Única (SRP), el motor de anomalías (US-02) debe confiar en que los objetos `SensorReading` que recibe ya están validados. Si intentara validar tipos de datos dentro del detector de anomalías, estaría acoplando la limpieza de datos con la lógica de negocio, lo que haría los tests futuros más frágiles y difíciles de mantener.
 
   ---
@@ -106,24 +109,26 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
 * **Contexto:** Implementación de la clase `SensorRegistry` y sus excepciones personalizadas siguiendo la regla absoluta del Desarrollo Guiado por Pruebas (TDD) para la US-01.
 * **Prompt Principal Utilizado:** *"Día 3 · Miércoles — TDD estricto... Implementa un SensorRegistry con la regla absoluta: cada commit de test precede al commit del código. Dame los pasos exactos para evidenciarlo en Git."*
 * **Uso de IA y Revisión de Código:** Utilicé a la IA para guiar el flujo operativo de Git y estructurar la inyección del código. Me proporcionó el test `test_get_unknown_sensor_raises` que forza un `ImportError` inicial (Fase RED), la implementación mínima basada en diccionarios para superarlo (Fase GREEN), y finalmente la reestructuración del código agregando el módulo `typing` de Python (Fase REFACTOR).
-* **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* Al momento de hacer los commits, la guía original sugería `git commit -am`. Lo cambié por `git add .` seguido de `git commit -m`. 
+* **Lo que cambié respecto a lo generado y el porqué:** 
+  1. *Cambio:* Al momento de hacer los commits, la guía original sugería `git commit -am`. Lo cambié por `git add .` seguido de `git commit -m`. 
   2. *Por qué (Reflexión de Git):* La bandera `-a` en `git commit` solo añade al stage los archivos que Git ya rastrea (tracked files). Como estaba creando archivos `.py` completamente nuevos para esta historia de usuario, usar `-am` habría fallado silenciosamente sin registrar mi código. Hacer el staging explícito garantiza que el historial sea inquebrantable para la auditoría de código.
 
   ---
 
-    ## [ENTRADA 4] Semana 2 - Día 4: Automatización de Calidad (DoD, Ruff, Mypy y Cobertura)
+## [ENTRADA 4] Semana 2 - Día 4: Automatización de Calidad (DoD, Ruff, Mypy y Cobertura)
 
-  * **Fecha:** 23 de Julio de 2026
-  * **Contexto:** Establecimiento de la *Definition of Done* y configuración de herramientas de análisis estático y cobertura (`pyproject.toml` con Ruff, Mypy y Pytest-cov) para garantizar la calidad del código de forma automatizada.
-  * **Prompt Principal Utilizado:** *"Día 4 · Jueves — Definition of Done y calidad automatizada. Escribe DEFINITION_OF_DONE.md y configura pyproject.toml con reglas de ruff (E, F, I, UP, B), pytest con --cov-fail-under=80 y mypy con disallow_untyped_defs."*
-  * **Uso de IA y Revisión de Código:** La IA fungió como ingeniero de DevOps, proporcionándome la checklist de calidad para el archivo `DEFINITION_OF_DONE.md` y la estructura del `pyproject.toml` con las banderas estrictas requeridas. Me indicó los comandos para instalar las dependencias necesarias (`pytest-cov`, `ruff`, `mypy`) y cómo ejecutar las auditorías en mi terminal.
-  * **Lo que cambié respecto a lo generado y el porqué:** 1. *Cambio:* La IA me indicó instalar las nuevas librerías, pero omitió guardar estos cambios en el control de dependencias. Lo corregí ejecutando de forma autónoma `pip freeze > requirements.txt`. 
-    2. *Cambio:* Al ejecutar el análisis estricto de `mypy`, el linter falló porque la IA estructuró el test inicial (del Día 3) sin tipado de retorno. Modifiqué manualmente el archivo `test_registry.py` agregando `-> None` a la función.
+* **Fecha:** 23 de Julio de 2026
+* **Contexto:** Establecimiento de la *Definition of Done* y configuración de herramientas de análisis estático y cobertura (`pyproject.toml` con Ruff, Mypy y Pytest-cov) para garantizar la calidad del código de forma automatizada.
+* **Prompt Principal Utilizado:** *"Día 4 · Jueves — Definition of Done y calidad automatizada. Escribe DEFINITION_OF_DONE.md y configura pyproject.toml con reglas de ruff (E, F, I, UP, B), pytest con --cov-fail-under=80 y mypy con disallow_untyped_defs."*
+* **Uso de IA y Revisión de Código:** La IA fungió como ingeniero de DevOps, proporcionándome la checklist de calidad para el archivo `DEFINITION_OF_DONE.md` y la estructura del `pyproject.toml` con las banderas estrictas requeridas. Me indicó los comandos para instalar las dependencias necesarias (`pytest-cov`, `ruff`, `mypy`) y cómo ejecutar las auditorías en mi terminal.
+* **Lo que cambié respecto a lo generado y el porqué:** 
+  1. *Cambio:* La IA me indicó instalar las nuevas librerías, pero omitió guardar estos cambios en el control de dependencias. Lo corregí ejecutando de forma autónoma `pip freeze > requirements.txt`. 
+  2. *Cambio:* Al ejecutar el análisis estricto de `mypy`, el linter falló porque la IA estructuró el test inicial (del Día 3) sin tipado de retorno. Modifiqué manualmente el archivo `test_registry.py` agregando `-> None` a la función.
     *Por qué (Criterio Técnico):* El primer cambio garantiza la reproducibilidad del entorno virtual para otros desarrolladores o para el servidor de despliegue continuo. El segundo cambio fue obligatorio para cumplir con la regla `disallow_untyped_defs = true` que definimos en el `pyproject.toml`, garantizando así que no haya "puntos ciegos" de tipado estático en el repositorio, ni siquiera en las pruebas.
 
-    ---
+---
 
-    ## [ENTRADA 5] Semana 2 - Día 5: Gestión Ágil (Product Backlog y Sprint Planning)
+## [ENTRADA 5] Semana 2 - Día 5: Gestión Ágil (Product Backlog y Sprint Planning)
 * **Fecha:** 24 de Julio de 2026
 * **Contexto:** Construcción de la documentación ágil requerida para el proyecto: Product Backlog completo (10 User Stories) priorizado mediante MoSCoW, y la definición del Sprint 1 Planning con estimaciones.
 * **Prompt Principal Utilizado:** *"Genera las 6 Historias de Usuario faltantes (US-05 a US-10) con priorización MoSCoW, Story Points y formato Gherkin para completar el Product Backlog. Luego redacta el Sprint 1 Planning."*
@@ -166,3 +171,75 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
   *Por qué (Criterio Técnico):* Un documento técnico debe ser compatible y renderizable en los entornos de trabajo del equipo. Forzar la sintaxis estándar de flujo garantiza soporte universal.
   2. *Cambio:* Apliqué un parche final antes del merge porque Ruff detectó un error `E501 Line too long (92 > 88)` en un comentario de `test_integration.py`. Dividí la línea manualmente.
   *Por qué (Criterio Técnico):* La calidad del código no es negociable. Romper un comentario en dos líneas permite mantener la configuración estricta de Ruff ("All checks passed") que establecimos en nuestro Definition of Done.
+
+---
+
+## [ENTRADA 9] Semana 3 - Día 1: API REST base y validación estricta con Pydantic
+* **Fecha:** 28 de Julio de 2026
+* **Contexto:** Inicialización de la API REST base para SensorHub utilizando FastAPI. Pruebas de inyección de datos erróneos (tipos incorrectos) en el endpoint de lecturas (POST `/readings`) a través de la interfaz autogenerada de Swagger UI.
+* **Prompt Principal Utilizado:** *"dentro de http://127.0.0.1:8000/docs: si le doy en execute con 'value': hola... me da Error 422 Unprocessable Content... analiza esto y dime debaria generar una entrada significativa."*
+* **Uso de IA y Revisión de Código:** La IA me ayudó a auditar la respuesta HTTP 422 y tradujo el comportamiento del framework: Pydantic actuó como un optoacoplador o fusible en el pin de entrada, interceptando el string ("hola") en lugar del float esperado, protegiendo así la capa de lógica interna de un colapso.
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Purgué manualmente el archivo `requirements.txt`, borrando todas las dependencias transitivas (como `starlette`, `pydantic_core`, `h11`) creadas por el comando `pip freeze`, dejando únicamente las herramientas explícitas de nivel superior (`fastapi`, `uvicorn`, `pytest`, `ruff`, `mypy`).
+  *Por qué (Criterio Técnico):* Mantener una lista de materiales (BOM) limpia y estricta es vital para la etapa de DevOps (Docker/Render). Evita "cortocircuitos" por conflictos de versiones en sub-dependencias, asegurando que el servidor en producción sea 100% determinista y fácil de auditar.
+
+---
+
+## [ENTRADA 10] Semana 3 - Día 2: Aislamiento de Base de Datos y Cirugía en Git
+* **Fecha:** 28 de Julio de 2026
+* **Contexto:** Durante la integración de SQLAlchemy en SensorHub, un error en la terminal sobreescribió el archivo `.gitignore` base. Esto provocó que archivos binarios compilados (`__pycache__`) y la memoria física local de la base de datos (`sensorhub.db`) se colaran en el "área de preparación" y viajaran a GitHub en el último commit.
+* **Prompt Principal Utilizado:** *"por que todos estos archivos se subieron a commit, me imagino que esta mal, porque ahora mi archivo gitignore antes se veia asi... como borro el ultimo commit, ya que le hice git push..."*
+* **Uso de IA y Revisión de Código:** La IA diagnosticó el "cortocircuito" en el control de versiones y me asistió proporcionando un protocolo de recuperación. Usamos `git reset --soft HEAD~1` para retroceder el tiempo sin borrar el código físico, limpiamos el índice con `restore --staged` y aplicamos `--force-with-lease` para reescribir el historial remoto.
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Restauré manualmente la plantilla completa de 218 líneas del `.gitignore` original de Python/FastAPI, y le anexé de forma segura las reglas de exclusión de bases de datos (`*.db`, `*.sqlite3`) en lugar de dejar un archivo genérico o vacío.
+  *Por qué (Criterio Técnico):* Una base de datos local nunca debe rastrearse en Git. Subirla expone datos sensibles y corrompe los despliegues en producción (generando conflictos de binarios). Dominar la reescritura del historial (Amnesia Histórica en Git) es vital para auditar y limpiar la placa de "soldadura derramada" antes de fusionar cualquier código a la rama principal (`main`).
+
+---
+
+## [ENTRADA 11] Semana 3 - Día 3: Inversión de Dependencias y Configuración de Cobertura
+* **Fecha:** 29 de Julio de 2026
+* **Contexto:** Implementación del patrón Repositorio y la capa de Servicios para la API de SensorHub. Se escribió un simulador en RAM (`FakeRepository`) para probar la lógica de negocio aislada. Depuración exhaustiva de la herramienta de cobertura (`pytest-cov`).
+* **Prompt Principal Utilizado:** *"despues de corregir el project.toml, obtuve... ERROR: Coverage failure: total of 63 is less than fail-under=80"*
+* **Uso de IA y Revisión de Código:** La IA fungió como herramienta de diagnóstico (troubleshooting). Primero identificó un error de sintaxis en `pyproject.toml` (argumento no reconocido `--app` en lugar de `--cov=app`). Luego analizó el reporte del 63% de cobertura y determinó que la lógica pura estaba al 100%, pero la herramienta estaba midiendo archivos de infraestructura sin pruebas (`main.py` y `db.py`).
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Además de implementar el servicio y el repositorio falso, añadí manualmente un bloque `[tool.coverage.run]` en el `pyproject.toml` con la directiva `omit` para ignorar los archivos `app/main.py` y `app/db.py`.
+  *Por qué (Criterio Técnico):* En una Arquitectura Limpia, el dominio (servicio) se somete a pruebas unitarias rigurosas, mientras que el cableado de la placa (`main.py`/HTTP) y la conexión de la memoria (`db.py`) requieren pruebas de integración. Excluir estos últimos archivos de las pruebas unitarias evita que la métrica de cobertura caiga injustamente (falsos negativos), permitiendo que el pipeline de Integración Continua (CI) pase a verde asegurando que el 100% de la lógica de negocio central está auditada.
+
+---
+
+## [ENTRADA 12] Semana 3 - Día 4: Convenciones REST, Inyección de Dependencias y Refactorización
+* **Fecha:** 30 de Julio de 2026
+* **Contexto:** Ensamblaje final de las capas de SensorHub (Routers, Servicios, Repositorios, Modelos). Implementación de los cinco endpoints fundamentales siguiendo el estándar REST para operaciones CRUD sobre los datos de los sensores, incluyendo paginación y manejo de errores. Sesión de depuración estricta de calidad.
+* **Prompt Principal Utilizado:** *"al correr, ruff check app/, obtuve: B008 Do not perform function call `Depends` in argument defaults... y ERROR: Coverage failure: total of 39 is less than fail-under=80"*
+* **Uso de IA y Revisión de Código:** Utilicé la IA como un manual interactivo para interactuar con la interfaz Swagger UI y probar manualmente cada verbo HTTP (`POST`, `GET`, `PATCH`, `DELETE`). Posteriormente, la IA fungió como revisor de código (Linter/Coverage analyzer) ayudándome a diagnosticar errores de sintaxis detectados por Ruff (`B008` y `B904`) y la caída en la cobertura de Pytest debido a los nuevos métodos del servicio.
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Refactoricé la inyección de dependencias en `main.py` utilizando la sintaxis moderna `Annotated[Type, Depends(...)]` en lugar del valor por defecto tradicional `Depends()`. También aseguré el rastreo de excepciones usando `raise ... from e`.
+  *Por qué (Criterio Técnico):* En Python, el uso de llamadas a funciones como valores por defecto en los argumentos (detectado por la advertencia B008 de Ruff) puede provocar fugas de memoria, ya que se evalúan solo una vez en la importación. `Annotated` resuelve esto acoplándose a las mejores prácticas de tipado estático, mientras que el bloque `raise ... from` preserva la traza original del error para una mejor observabilidad.
+  2. *Cambio:* Excluí temporalmente la capa de conexión a base de datos pura (`app/repositories/sql.py`) del reporte de cobertura mediante `pyproject.toml` y amplié el `FakeRepository` en memoria con pruebas para los nuevos métodos CRUD.
+  *Por qué (Criterio Técnico):* En una Arquitectura Limpia, las pruebas unitarias deben enfocarse estrictamente en la lógica de dominio (la capa de Servicio), aislando las interacciones externas (como bases de datos reales, las cuales requieren pruebas de integración). Excluir `sql.py` y emular la memoria con `FakeRepository` permite mantener métricas precisas y tiempos de prueba ultrarrápidos, cumpliendo con el estándar TDD sin comprometer el pipeline.
+
+---
+
+## [ENTRADA 13] Semana 3 - Día 5: Ejercicio Integrador, Arquitectura en 4 Capas y Pruebas de Integración
+* **Fecha:** 30 de Julio de 2026
+* **Contexto:** Consolidación y cierre de la arquitectura backend de SensorHub. Se implementó el modelo relacional completo con SQLAlchemy (relación Uno a Muchos entre `SensorModel` y `ReadingModel`), validaciones estrictas de física real y termodinámica en Pydantic (`model_validator`), separación de pines web mediante `APIRouter`, extracción de dependencias en un módulo dedicado (`dependencies.py`) para evitar imports circulares, y pruebas automatizadas de integración utilizando el `TestClient` de FastAPI.
+* **Prompt Principal Utilizado:** *"Día 5 · Viernes — Ejercicio integrador: API completa de SensorHub... confirmo, ya veo la interfaz de swagger..."*
+* **Uso de IA y Revisión de Código:** La IA me guio en el desglose del ejercicio integrador en tres fases de ensamblaje (Modelos/Esquemas, Capa de Lógica/Repositorio SQL, y Enrutadores/Pruebas de Integración). Además, la IA me ayudó a diagnosticar y solucionar un error crítico de **Import Circular** al separar los *routers*, extrayendo la inyección de dependencias a un archivo independiente (`dependencies.py`). Finalmente, la suite de pruebas automatizadas logró un **92.79% de cobertura**, superando holgadamente el mínimo requerido del 80%.
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Eliminé el archivo `tests/test_services.py` de la semana pasada y creé `tests/test_api.py` utilizando el `TestClient` de FastAPI para simular peticiones reales sobre los endpoints.
+  *Por qué (Criterio Técnico):* En la Semana 3 pasamos de pruebas unitarias aisladas (con repositorios *fake* en memoria) a **Pruebas de Integración (End-to-End)** que auditan el comportamiento completo del sistema (routers, servicios, base de datos SQLite y validaciones de Pydantic). Esto nos permitió eliminar restricciones de exclusión en la cobertura y auditar con precisión de producción el sistema real.
+  2. *Cambio:* Creé el módulo `app/dependencies.py` para alojar la fábrica de sesiones y servicios (`get_sensor_hub_service`).
+  *Por qué (Criterio Técnico):* Al estructurar una arquitectura limpia en 4 capas con múltiples *routers*, las referencias cruzadas entre `main.py` y los enrutadores provocaban un cortocircuito lógico (*Circular Import*). Aislar la fuente de alimentación de dependencias permite un acoplamiento desacoplado y modular, siguiendo los estándares de diseño de software empresarial.
+
+---
+
+## [ENTRADA 14] Semana 3 - Día 6: Revisión por Pares (Code Review) Estricta y Refactorización
+* **Fecha:** 2 de Agosto de 2026
+* **Contexto:** Realización del ciclo de *Peer Review* cruzado. Inicialmente se había aprobado y fusionado el código, pero al recibir el Checklist oficial de 10 puntos, se ejecutó un `git reset --hard` para revertir el merge y adherirse estrictamente al estándar. Se auditó la API de mi compañero y se refactorizó mi propia API en base a su retroalimentación.
+* **Prompt Principal Utilizado:** *"Estoy haciendo un Code Review de la Semana 3 de mi compañero Julián. Quiero que actúes como un Arquitecto Backend Senior y audites este código basándote en el Checklist oficial..."* y *"Ahora te daré la observación que mi compañero realizó a mi PR... dame los pasos para aplicar los cambios en mi código local"*.
+* **Uso de IA y Revisión de Código:** Utilicé a la IA como copiloto para clonar y auditar localmente el código del compañero. La IA detectó una falla silenciosa pero crítica de integridad relacional (falta de `ForeignKey` en los modelos) y acoplamiento del protocolo HTTP en la capa de servicios. Además, utilicé la IA para estructurar respuestas profesionales en Markdown justificando decisiones de diseño (complejidad algorítmica $O(N)$ vs $O(\log N)$ al usar índices).
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Agregué explícitamente `index=True` a la columna `sensor_id` en SQLAlchemy.
+  *Por qué (Criterio Técnico):* Para evitar *Full Table Scans* cuando el endpoint `GET` filtre lecturas por sensor, reduciendo la complejidad de búsqueda a $O(\log N)$ mediante un B-Tree.
+  2. *Cambio:* Extraje la validación termodinámica (cero absoluto y unidades) a una clase base `ReadingBase` en Pydantic.
+  *Por qué (Criterio Técnico):* En la versión anterior, el endpoint `PATCH` (que usaba un esquema sin validadores) permitía evadir las leyes de la física. Al usar herencia, garantizo que cualquier mutación de datos (creación o actualización parcial) pase por los fusibles lógicos antes de tocar la base de datos.

@@ -1,6 +1,5 @@
 import json
 import logging
-from typing import Dict, Union
 
 # EXTENSIÓN: Configuración de Logging estructurado en consola
 logging.basicConfig(
@@ -14,7 +13,7 @@ class DataRecorder:
     def __init__(self, filepath: str) -> None:
         self.filepath = filepath
 
-    def record(self, data: Dict[str, Union[str, float]]) -> None:
+    def record(self, data: dict[str, str | float]) -> None:
         """Guarda los datos en formato JSON-lines (una línea por registro)."""
         if not data:
             return
