@@ -243,3 +243,21 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
   *Por qué (Criterio Técnico):* Para evitar *Full Table Scans* cuando el endpoint `GET` filtre lecturas por sensor, reduciendo la complejidad de búsqueda a $O(\log N)$ mediante un B-Tree.
   2. *Cambio:* Extraje la validación termodinámica (cero absoluto y unidades) a una clase base `ReadingBase` en Pydantic.
   *Por qué (Criterio Técnico):* En la versión anterior, el endpoint `PATCH` (que usaba un esquema sin validadores) permitía evadir las leyes de la física. Al usar herencia, garantizo que cualquier mutación de datos (creación o actualización parcial) pase por los fusibles lógicos antes de tocar la base de datos.
+
+---
+
+## [ENTRADA X] Semana 4 - Día 1: Docker desde cero y Contenerización
+
+* **Fecha:** 3 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Contenerizar la API de SensorHub pasando de un entorno virtual local a un entorno aislado, estandarizado y reproducible mediante Docker, escribiendo el `Dockerfile` y estableciendo la comunicación de puertos.
+* **Prompt Principal Utilizado:** *"listo, asi se ve mi cmd: [...] Ademas despues de que terminara de lanzar maquina ensambladora, se abrio una pestaña de Alerta de seguridad de windows, la imagen adjunta, lee detallamente que dice..."*
+
+### Lo que produjo la IA:
+Diagnóstico sobre el proceso de *build* (capas y dependencias) y explicación sobre la alerta del Firewall de Windows. La IA utilizó la analogía de la "apertura de un pin de comunicación" para explicar que el mapeo de puertos (`-p 8000:8000`) expone el contenedor a la red local, detonando el protocolo de seguridad del sistema operativo.
+
+* **Uso de IA y Revisión de Código:** Utilicé a la IA como copiloto para auditar la configuración inicial de infraestructura. Diagnosticamos juntos la importancia del orden de los comandos `COPY` en el archivo de construcción para aprovechar la memoria caché, simulando la soldadura de componentes base vs. el ruteo de pistas modificables.
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Creé el archivo `.dockerignore` excluyendo `venv/`, `.env` y carpetas de caché (`__pycache__`, `.pytest_cache`) antes de ejecutar la compilación, un paso que no venía explícito en las instrucciones iniciales.
+  *Por qué (Criterio Técnico):* Prevenir un fallo crítico de seguridad y rendimiento. Si el comando `COPY . .` arrastra las variables de entorno locales, los secretos se "soldarían" permanentemente dentro de una imagen inmutable. Además, copiar un `venv` de Windows a un contenedor Linux generaría sobrepeso y conflictos de binarios.
+  2. *Cambio:* Otorgué permisos a *Docker Desktop Backend* en el Firewall de Windows para redes privadas.
+  *Por qué (Criterio Técnico):* Para habilitar físicamente el enrutamiento del tráfico HTTP. Sin este permiso de red, el puerto 8000 local rechazaría las peticiones del navegador, aislando por completo al contenedor de Uvicorn.
