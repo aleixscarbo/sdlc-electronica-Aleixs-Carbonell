@@ -1,0 +1,25 @@
+# docker-compose.yml
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://sensor:secret@db:5432/sensorhub
+    depends_on:
+      db:
+        condition: service_healthy # <--- ¡Clave! Espera a que esté saludable, no solo encendido.
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: sensor
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: sensorhub
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: # <--- El circuito de monitoreo
+      test: ["CMD-SHELL", "pg_isready -U sensor -d sensorhub"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
+volumes:
+  pgdata:

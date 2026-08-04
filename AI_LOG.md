@@ -246,7 +246,7 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
 
 ---
 
-## [ENTRADA X] Semana 4 - Día 1: Docker desde cero y Contenerización
+## [ENTRADA 15] Semana 4 - Día 1: Docker desde cero y Contenerización
 
 * **Fecha:** 3 de Agosto de 2026
 * **Contexto/Objetivo de la Sesión:** Contenerizar la API de SensorHub pasando de un entorno virtual local a un entorno aislado, estandarizado y reproducible mediante Docker, escribiendo el `Dockerfile` y estableciendo la comunicación de puertos.
@@ -261,3 +261,19 @@ Diagnóstico sobre el proceso de *build* (capas y dependencias) y explicación s
   *Por qué (Criterio Técnico):* Prevenir un fallo crítico de seguridad y rendimiento. Si el comando `COPY . .` arrastra las variables de entorno locales, los secretos se "soldarían" permanentemente dentro de una imagen inmutable. Además, copiar un `venv` de Windows a un contenedor Linux generaría sobrepeso y conflictos de binarios.
   2. *Cambio:* Otorgué permisos a *Docker Desktop Backend* en el Firewall de Windows para redes privadas.
   *Por qué (Criterio Técnico):* Para habilitar físicamente el enrutamiento del tráfico HTTP. Sin este permiso de red, el puerto 8000 local rechazaría las peticiones del navegador, aislando por completo al contenedor de Uvicorn.
+
+  ---
+
+## [ENTRADA 16] Semana 4 - Día 2: Orquestación, PostgreSQL y Condición de Carrera
+
+* **Fecha:** 4 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Migrar la persistencia local de SQLite a PostgreSQL contenedorizado, utilizando Docker Compose para orquestar la red virtual entre la API y la Base de Datos.
+* **Prompt Principal Utilizado:** *"antes de coninuar. ahora mi cmd se ve asi, analiza todo lo que paso: [...] api-1 | psycopg.OperationalError: connection failed: connection to server at '172.18.0.2', port 5432 failed: Connection refused"*
+
+### Lo que produjo la IA:
+Un diagnóstico preciso de una "Condición de Carrera" (Race Condition) durante el arranque de los contenedores. La IA explicó cómo la API intentó conectarse a PostgreSQL antes de que este abriera su puerto TCP, provocando un error fatal y la caída del contenedor de FastAPI.
+
+* **Uso de IA y Revisión de Código:** Utilicé a la IA para refactorizar la lógica de inicialización en `docker-compose.yml`. Entendimos que `depends_on: [db]` solo garantiza el orden de encendido de los contenedores, pero no su disponibilidad operativa en red.
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Implementé un bloque `healthcheck` utilizando el comando nativo `pg_isready` y modifiqué la dependencia a `condition: service_healthy`.
+  *Por qué (Criterio Técnico):* Para forzar un patrón de espera activa (polling). Al exigir que PostgreSQL pase su test interno de disponibilidad TCP antes de arrancar Uvicorn, garantizamos que las migraciones y conexiones iniciales de SQLAlchemy nunca colisionen con un socket cerrado, estabilizando el sistema distribuido.
