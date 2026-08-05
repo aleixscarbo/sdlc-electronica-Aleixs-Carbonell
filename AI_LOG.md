@@ -277,3 +277,19 @@ Un diagnóstico preciso de una "Condición de Carrera" (Race Condition) durante 
 * **Lo que cambié respecto a lo generado y el porqué:**
   1. *Cambio:* Implementé un bloque `healthcheck` utilizando el comando nativo `pg_isready` y modifiqué la dependencia a `condition: service_healthy`.
   *Por qué (Criterio Técnico):* Para forzar un patrón de espera activa (polling). Al exigir que PostgreSQL pase su test interno de disponibilidad TCP antes de arrancar Uvicorn, garantizamos que las migraciones y conexiones iniciales de SQLAlchemy nunca colisionen con un socket cerrado, estabilizando el sistema distribuido.
+
+---
+
+## [ENTRADA 17] Semana 4 - Día 2: Configuración de Alembic y Migraciones en PostgreSQL
+
+* **Fecha:** 4 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Configurar el sistema de control de versiones de bases de datos (Alembic) para gestionar la creación del esquema en PostgreSQL, separando la responsabilidad de inicialización de la base de datos del código de la API.
+* **Prompt Principal Utilizado:** *"antes de continuar. para hacer el commit, debo darle ctrl c primero? ademas para las notas que llevo (good notes), falto sintetizar la infromacion de alembic."*
+
+### Lo que produjo la IA:
+Una explicación detallada sobre el funcionamiento de Alembic (analogiado como un sistema de control de versiones o "revisiones de parches de PCB" frente al método destructivo de borrar bases de datos), además de la guía paso a paso para configurar los archivos `alembic.ini`, `migrations/env.py` y estructurar el paquete `app/models/__init__.py` para que la herramienta detectara correctamente la metadata.
+
+* **Uso de IA y Revisión de Código:** Utilicé a la IA para auditar las rutas de importación de SQLAlchemy y resolver el problema de resolución de nombres de red (`host 'db'` vs `localhost`) al ejecutar comandos de migración desde la máquina anfitriona (Windows) hacia el contenedor Docker.
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Se centralizaron las importaciones de `Base`, `SensorModel` y `ReadingModel` dentro del paquete `app/models/__init__.py` y se exportaron explícitamente con `__all__`.
+  *Por qué (Criterio Técnico):* Garantizamos que el inspector de Alembic (`env.py`) tenga visibilidad directa sobre la estructura de tablas de la aplicación sin depender de archivos dispersos, evitando falsos positivos de "tablas eliminadas" durante la autogeneración de esquemas.

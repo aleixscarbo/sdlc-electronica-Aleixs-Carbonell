@@ -10,6 +10,7 @@ services:
         condition: service_healthy # <--- ¡Clave! Espera a que esté saludable, no solo encendido.
   db:
     image: postgres:16
+    ports: ["5432:5432"] # <--- ¡Este es el cable que faltaba!
     environment:
       POSTGRES_USER: sensor
       POSTGRES_PASSWORD: secret
