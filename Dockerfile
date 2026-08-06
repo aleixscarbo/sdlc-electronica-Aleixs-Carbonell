@@ -17,5 +17,5 @@ COPY . .
 # 6. Definir el Pin de Salida: Le decimos a Docker que este contenedor emitirá señales por el puerto 8000.
 EXPOSE 8000
 
-# 7. Energizar el chip: El comando exacto que se ejecutará cuando el contenedor se encienda.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# 7. Ejecutamos las migraciones primero y, si son exitosas (&&), levantamos el servidor
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
