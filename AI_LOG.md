@@ -293,3 +293,19 @@ Una explicación detallada sobre el funcionamiento de Alembic (analogiado como u
 * **Lo que cambié respecto a lo generado y el porqué:**
   1. *Cambio:* Se centralizaron las importaciones de `Base`, `SensorModel` y `ReadingModel` dentro del paquete `app/models/__init__.py` y se exportaron explícitamente con `__all__`.
   *Por qué (Criterio Técnico):* Garantizamos que el inspector de Alembic (`env.py`) tenga visibilidad directa sobre la estructura de tablas de la aplicación sin depender de archivos dispersos, evitando falsos positivos de "tablas eliminadas" durante la autogeneración de esquemas.
+
+---
+
+## [ENTRADA 18] Semana 4 - Día 3: Implementación de Pipeline CI y Branch Protection
+
+* **Fecha:** 5 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Configurar un pipeline de Integración Continua (CI) usando GitHub Actions para automatizar el testing (pytest, ruff, mypy) y proteger la rama principal de código defectuoso.
+* **Prompt Principal Utilizado:** *"volvio a dar erro, ya que solo copie y pegue la linea que me diste y al aher git psuh y empzar el work flow, este dio error de nuevo en test linting with ruff, que dice: Run ruff check . F821 Undefined name `Base`"*
+
+### Lo que produjo la IA:
+La IA diagnosticó que el pipeline falló debido a errores de linteo (`F401 imported but unused`) dejados por refactorizaciones anteriores, y posteriormente por un `NameError` al faltar importaciones explícitas en el archivo de pruebas. Explicó que el entorno del CI en la nube es "aislado y virgen", por lo que los tests deben ser capaces de levantar y destruir su propia infraestructura en SQLite sin depender de herramientas externas como Alembic.
+
+* **Uso de IA y Revisión de Código:** Utilicé a la IA para analizar los logs de error del runner de GitHub (`ubuntu-latest`) y aplicar correcciones locales usando `ruff check . --fix` antes de hacer push (Shift-Left Testing).
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Se inyectó `Base.metadata.create_all(bind=engine)` directamente en `tests/test_api.py` junto con sus importaciones respectivas (`Base`, `engine`).
+  *Por qué (Criterio Técnico):* Para garantizar el aislamiento del entorno de pruebas. Al ejecutar la creación de tablas en el *setup* del archivo de pruebas, aseguramos que la base de datos temporal (SQLite) exista antes de que `TestClient` lance los *requests*, evitando el `OperationalError` en el servidor de CI que no tiene acceso a la base de datos de Docker Compose.
