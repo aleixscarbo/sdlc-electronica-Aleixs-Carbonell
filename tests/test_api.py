@@ -2,6 +2,7 @@ import time
 
 from fastapi.testclient import TestClient
 
+from app.db import Base, engine
 from app.main import app
 
 # ---> INYECCIÓN PARA EL ENTORNO DE PRUEBAS <---
