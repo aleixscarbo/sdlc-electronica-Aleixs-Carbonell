@@ -8,7 +8,7 @@ app = FastAPI(title="SensorHub API", version="1.0.0")
 
 # ---> INYECCIÓN DEL HEALTH CHECK PARA RENDER <---
 @app.get("/health")
-def health_check():
+def health_check() -> dict[str, str]:
     """Endpoint para que la nube de Render sepa que la API está viva."""
     return {"status": "ok"}
 # ------------------------------------------------
