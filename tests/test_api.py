@@ -4,6 +4,11 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
+# ---> INYECCIÓN PARA EL ENTORNO DE PRUEBAS <---
+# Como la API ya no crea las tablas, obligamos a que la 
+# suite de pruebas construya las suyas en el SQLite temporal.
+Base.metadata.create_all(bind=engine)
+
 client = TestClient(app)
 
 
