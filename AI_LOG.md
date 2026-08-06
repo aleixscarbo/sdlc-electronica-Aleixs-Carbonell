@@ -309,3 +309,24 @@ La IA diagnosticó que el pipeline falló debido a errores de linteo (`F401 impo
 * **Lo que cambié respecto a lo generado y el porqué:**
   1. *Cambio:* Se inyectó `Base.metadata.create_all(bind=engine)` directamente en `tests/test_api.py` junto con sus importaciones respectivas (`Base`, `engine`).
   *Por qué (Criterio Técnico):* Para garantizar el aislamiento del entorno de pruebas. Al ejecutar la creación de tablas en el *setup* del archivo de pruebas, aseguramos que la base de datos temporal (SQLite) exista antes de que `TestClient` lance los *requests*, evitando el `OperationalError` en el servidor de CI que no tiene acceso a la base de datos de Docker Compose.
+
+---
+
+## [ENTRADA 19] Semana 4 - Día 4: IaC, Depuración en la Nube y Healthchecks en Render
+
+* **Fecha:** 6 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Desplegar la API SensorHub y su base de datos PostgreSQL en la nube (Render.com) utilizando Infraestructura como Código (IaC) mediante un archivo `render.yaml`, y lograr un pipeline de Continuous Deployment (CD) exitoso.
+* **Prompts Principales Utilizados:** 1. *"el log no finalizo con exito, ahora dice: ... psycopg.OperationalError: connection failed: connection to server at '127.0.0.1'"*
+  2. *"Deploy failed... Timed out after waiting for internal health check to return a successful response code at: ... /health"*
+
+### Lo que produjo la IA:
+Actuando como ingeniero SRE (Site Reliability Engineer), la IA me ayudó a leer y diagnosticar los logs de producción de Render. Primero, identificó que Alembic estaba intentando usar la URL local en lugar de la inyectada por la nube, y luego explicó por qué SQLAlchemy exigía el driver `psycopg2` heredado en lugar de nuestro moderno `psycopg3` (debido a los prefijos de URL de Render). Finalmente, diagnosticó que el orquestador de Render cancelaba el despliegue (Timeout) porque FastAPI devolvía un Error 404 al no tener programado un endpoint de salud (`/health`).
+
+* **Uso de IA y Revisión de Código:** Utilicé la IA para simular un proceso real de depuración DevOps, aislando fallas de red, corrigiendo configuración de drivers en SQLAlchemy y entendiendo la integración paralela entre GitHub Actions (CI) y Render (CD).
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Se modificó el `CMD` del `Dockerfile` para ejecutar `alembic upgrade head && uvicorn ...`.
+  *Por qué (Criterio Técnico):* En un entorno de producción efímero, es crítico garantizar que las tablas existan *antes* de que la API empiece a recibir tráfico, evitando que la aplicación se caiga por falta de esquema.
+  2. *Cambio:* Se creó un "Interruptor Cloud" en `migrations/env.py` para leer `DATABASE_URL` y forzar el reemplazo de `postgres://` o `postgresql://` por `postgresql+psycopg://`.
+  *Por qué (Criterio Técnico):* Para forzar el uso del driver moderno (`psycopg3`) que instalamos localmente y evitar que SQLAlchemy falle por no encontrar el módulo antiguo `psycopg2`.
+  3. *Cambio:* Se agregó un endpoint `@app.get("/health")` en `main.py`.
+  *Por qué (Criterio Técnico):* En la nube, los balanceadores de carga necesitan un "latido" (Heartbeat/Health Check) que devuelva un código HTTP 200 OK. Sin esto, Render asume que el contenedor está defectuoso, no enruta el puerto 8000 hacia el internet público y cancela el despliegue a los 15 minutos.
