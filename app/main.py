@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 
-from app.db import Base, engine
-
 # Importamos los routers
 from app.routers import readings, sensors
 

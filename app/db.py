@@ -8,13 +8,14 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 def get_database_url() -> str:
     # Leemos la variable de entorno. Si no existe, usamos SQLite por defecto.
     url = os.getenv("DATABASE_URL", "sqlite:///sensorhub.db")
-    
+
     # Normalizamos la URL para asegurar que use el driver psycopg
     if url.startswith("postgres://"):
         return url.replace("postgres://", "postgresql+psycopg://", 1)
     if url.startswith("postgresql://") and "+psycopg" not in url:
         return url.replace("postgresql://", "postgresql+psycopg://", 1)
     return url
+
 
 SQLALCHEMY_DATABASE_URL = get_database_url()
 
@@ -30,6 +31,7 @@ else:
 
 # La fábrica de "transacciones" (Start bit / Stop bit)
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+
 
 # La placa base de donde heredarán todos los modelos
 class Base(DeclarativeBase):

@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 class AlertStrategy(ABC):
     """Interfaz abstracta para el envío de alertas (Patrón Strategy)."""
-    
+
     @abstractmethod
     def send_alert(self, sensor_id: str, anomaly_type: str) -> None:
         pass
@@ -12,14 +12,14 @@ class AlertStrategy(ABC):
 
 class ConsoleAlertStrategy(AlertStrategy):
     """Implementación concreta que emite alertas por la salida estándar."""
-    
+
     def send_alert(self, sensor_id: str, anomaly_type: str) -> None:
         print(f"[CRITICAL] {sensor_id}: Anomalía detectada ({anomaly_type})")
 
 
 class FileAlertStrategy(AlertStrategy):
     """Implementación concreta que persiste alertas en un archivo log."""
-    
+
     def __init__(self, filepath: str = "alerts.log") -> None:
         self.filepath = filepath
 
@@ -31,7 +31,7 @@ class FileAlertStrategy(AlertStrategy):
 
 class AlertManager:
     """Gestor de contexto que utiliza una estrategia de alerta inyectada."""
-    
+
     def __init__(self, strategy: AlertStrategy) -> None:
         self.strategy = strategy
 

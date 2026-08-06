@@ -6,6 +6,7 @@ from app.repositories.base import SensorHubRepository
 
 class SensorHubService:
     """Lógica de negocio central. Audita la integridad relacional."""
+
     def __init__(self, repo: SensorHubRepository) -> None:
         self._repo = repo
 
@@ -32,9 +33,14 @@ class SensorHubService:
         # (Nota: La validación termodinámica ya la hizo Pydantic en los Schemas)
         return self._repo.add_reading(sensor_id, value, unit)
 
-    def get_sensor_readings(self, sensor_id: str, limit: int, offset: int, 
-                            from_date: datetime | None, 
-                            to_date: datetime | None) -> list[ReadingModel]:
+    def get_sensor_readings(
+        self,
+        sensor_id: str,
+        limit: int,
+        offset: int,
+        from_date: datetime | None,
+        to_date: datetime | None,
+    ) -> list[ReadingModel]:
         if not self._repo.get_sensor(sensor_id):
             raise ValueError(f"El sensor '{sensor_id}' no existe.")
         return self._repo.list_readings(sensor_id, limit, offset, from_date, to_date)

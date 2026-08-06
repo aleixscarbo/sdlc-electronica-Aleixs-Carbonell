@@ -2,10 +2,8 @@ import os
 import sys
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 # --- INYECCIÓN DE RUTAS E IMPORTACIÓN DE MODELOS ---
 # Esto permite que Alembic (que corre en la carpeta migrations/)
@@ -13,8 +11,10 @@ from alembic import context
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from app.db import Base
+
 # IMPORTACIÓN CORREGIDA: Traemos los modelos desde el __init__.py
-from app.models import SensorModel, ReadingModel
+from app.models import ReadingModel, SensorModel  # noqa: F401
+
 # ---------------------------------------------------
 
 # this is the Alembic Config object, which provides
@@ -76,9 +76,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

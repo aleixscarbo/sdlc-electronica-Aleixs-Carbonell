@@ -6,9 +6,10 @@ class TrafficLightState(Enum):
     YELLOW = auto()
     GREEN = auto()
 
+
 class TrafficLightFSM:
     """El estado vive dentro del objeto, no en una variable global."""
-    
+
     def __init__(self) -> None:
         # Variables privadas (Encapsulamiento)
         self._state = TrafficLightState.RED
@@ -18,7 +19,7 @@ class TrafficLightFSM:
     def state(self) -> TrafficLightState:
         """Pin de solo lectura para ver el estado actual."""
         return self._state
-        
+
     @property
     def cycle_count(self) -> int:
         """Pin de solo lectura para ver cuántas transiciones han ocurrido."""
