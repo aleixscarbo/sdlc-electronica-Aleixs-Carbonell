@@ -72,13 +72,17 @@ def run_migrations_online() -> None:
     # 1. Leemos la configuración base del alembic.ini
     configuration = config.get_section(config.config_ini_section, {})
     
-    # 2. INTERRUPTOR CLOUD: Si existe DATABASE_URL en el entorno (ej. en Render o Docker Compose),
-    # sobrescribimos la URL del .ini para usar la de producción/entorno virtual.
+    # 2. INTERRUPTOR CLOUD: Si existe DATABASE_URL en el entorno (ej. en Render o Docker
+    # Compose),sobrescribimos la URL del .ini para usar la de producción/entorno virtual
     db_url = os.getenv("DATABASE_URL")
     if db_url:
-        # Reemplazamos 'postgres://' por 'postgresql+psycopg://' si Render nos da la antigua
+        # Forzamos el uso del driver moderno (psycopg 3) reemplazando cualquier prefijo 
+        # genérico
         if db_url.startswith("postgres://"):
             db_url = db_url.replace("postgres://", "postgresql+psycopg://", 1)
+        elif db_url.startswith("postgresql://"):
+            db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
+            
         configuration["sqlalchemy.url"] = db_url
 
     connectable = engine_from_config(
