@@ -1,11 +1,12 @@
 # .github/workflows/ci.yml
 name: CI
 
-# El robot se activará cuando alguien haga un "push" a la rama main,
-# o cuando alguien abra un Pull Request hacia la rama main.
+# El robot se activará cuando alguien haga un "push" a cualquier rama
+# o abra un Pull Request hacia main.
 on:
   push:
-    branches: [main]
+    branches:
+      - '**' # <--- Este comodín (asterisco doble) significa "TODAS las ramas"
   pull_request:
     branches: [main]
 
