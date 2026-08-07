@@ -1,21 +1,46 @@
-# 1. El sustrato de silicio base: Usamos una versión oficial y ligera de Python.
-FROM python:3.12-slim
+# ==============================================================================
+# ETAPA 1: Banco de Ensamble y Carga de Componentes (Builder)
+# En esta etapa temporal instalamos pip, compilamos librerías y preparamos el venv.
+# Ninguno de los residuos de instalación se heredará a la placa final.
+# ==============================================================================
+FROM python:3.12-slim AS builder
 
-# 2. El área de trabajo en el chip: Crea una carpeta interna llamada /app y nos mueve allí.
 WORKDIR /app
 
-# 3. La Lista de Materiales (BOM): Copiamos SOLO el archivo de dependencias primero.
-COPY requirements.txt .
+# Evitar que Python escriba archivos .pyc y forzar salida de logs inmediata
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# 4. Soldar los componentes: Instalamos las librerías. 
-# (--no-cache-dir evita guardar archivos temporales de instalación para que la imagen pese menos).
+# Crear entorno virtual de producción aislado
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Instalar dependencias (BOM) en el entorno virtual
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. Ruteo de pistas (El código fuente): Ahora sí, copiamos todo el resto de tu código a la carpeta /app.
+
+# ==============================================================================
+# ETAPA 2: Placa Final de Producción (Runner)
+# Sustrato ultra ligero (< 200 MB) que solo contiene el binario/venv ya construido
+# y el firmware/código fuente de la aplicación.
+# ==============================================================================
+FROM python:3.12-slim AS runner
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copiar el entorno virtual ya compilado y listo desde la etapa "builder"
+COPY --from=builder /opt/venv /opt/venv
+
+# Copiar el ruteo de pistas (código fuente) a la placa de producción
 COPY . .
 
-# 6. Definir el Pin de Salida: Le decimos a Docker que este contenedor emitirá señales por el puerto 8000.
+# Pin de salida para tráfico de red
 EXPOSE 8000
 
-# 7. Ejecutamos las migraciones primero y, si son exitosas (&&), levantamos el servidor
+# Comando de arranque atómico (Correr migraciones Alembic + Servidor Uvicorn)
 CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
