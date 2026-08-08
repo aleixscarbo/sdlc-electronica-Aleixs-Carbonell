@@ -243,3 +243,139 @@ Un script que demuestra el antipatrón de una interfaz monolítica (`FatSensorIn
   *Por qué (Criterio Técnico):* Para evitar *Full Table Scans* cuando el endpoint `GET` filtre lecturas por sensor, reduciendo la complejidad de búsqueda a $O(\log N)$ mediante un B-Tree.
   2. *Cambio:* Extraje la validación termodinámica (cero absoluto y unidades) a una clase base `ReadingBase` en Pydantic.
   *Por qué (Criterio Técnico):* En la versión anterior, el endpoint `PATCH` (que usaba un esquema sin validadores) permitía evadir las leyes de la física. Al usar herencia, garantizo que cualquier mutación de datos (creación o actualización parcial) pase por los fusibles lógicos antes de tocar la base de datos.
+
+---
+
+## [ENTRADA 15] Semana 4 - Día 1: Docker desde cero y Contenerización
+
+* **Fecha:** 3 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Contenerizar la API de SensorHub pasando de un entorno virtual local a un entorno aislado, estandarizado y reproducible mediante Docker, escribiendo el `Dockerfile` y estableciendo la comunicación de puertos.
+* **Prompt Principal Utilizado:** *"listo, asi se ve mi cmd: [...] Ademas despues de que terminara de lanzar maquina ensambladora, se abrio una pestaña de Alerta de seguridad de windows, la imagen adjunta, lee detallamente que dice..."*
+
+### Lo que produjo la IA:
+Diagnóstico sobre el proceso de *build* (capas y dependencias) y explicación sobre la alerta del Firewall de Windows. La IA utilizó la analogía de la "apertura de un pin de comunicación" para explicar que el mapeo de puertos (`-p 8000:8000`) expone el contenedor a la red local, detonando el protocolo de seguridad del sistema operativo.
+
+* **Uso de IA y Revisión de Código:** Utilicé a la IA como copiloto para auditar la configuración inicial de infraestructura. Diagnosticamos juntos la importancia del orden de los comandos `COPY` en el archivo de construcción para aprovechar la memoria caché, simulando la soldadura de componentes base vs. el ruteo de pistas modificables.
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Creé el archivo `.dockerignore` excluyendo `venv/`, `.env` y carpetas de caché (`__pycache__`, `.pytest_cache`) antes de ejecutar la compilación, un paso que no venía explícito en las instrucciones iniciales.
+  *Por qué (Criterio Técnico):* Prevenir un fallo crítico de seguridad y rendimiento. Si el comando `COPY . .` arrastra las variables de entorno locales, los secretos se "soldarían" permanentemente dentro de una imagen inmutable. Además, copiar un `venv` de Windows a un contenedor Linux generaría sobrepeso y conflictos de binarios.
+  2. *Cambio:* Otorgué permisos a *Docker Desktop Backend* en el Firewall de Windows para redes privadas.
+  *Por qué (Criterio Técnico):* Para habilitar físicamente el enrutamiento del tráfico HTTP. Sin este permiso de red, el puerto 8000 local rechazaría las peticiones del navegador, aislando por completo al contenedor de Uvicorn.
+
+  ---
+
+## [ENTRADA 16] Semana 4 - Día 2: Orquestación, PostgreSQL y Condición de Carrera
+
+* **Fecha:** 4 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Migrar la persistencia local de SQLite a PostgreSQL contenedorizado, utilizando Docker Compose para orquestar la red virtual entre la API y la Base de Datos.
+* **Prompt Principal Utilizado:** *"antes de coninuar. ahora mi cmd se ve asi, analiza todo lo que paso: [...] api-1 | psycopg.OperationalError: connection failed: connection to server at '172.18.0.2', port 5432 failed: Connection refused"*
+
+### Lo que produjo la IA:
+Un diagnóstico preciso de una "Condición de Carrera" (Race Condition) durante el arranque de los contenedores. La IA explicó cómo la API intentó conectarse a PostgreSQL antes de que este abriera su puerto TCP, provocando un error fatal y la caída del contenedor de FastAPI.
+
+* **Uso de IA y Revisión de Código:** Utilicé a la IA para refactorizar la lógica de inicialización en `docker-compose.yml`. Entendimos que `depends_on: [db]` solo garantiza el orden de encendido de los contenedores, pero no su disponibilidad operativa en red.
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Implementé un bloque `healthcheck` utilizando el comando nativo `pg_isready` y modifiqué la dependencia a `condition: service_healthy`.
+  *Por qué (Criterio Técnico):* Para forzar un patrón de espera activa (polling). Al exigir que PostgreSQL pase su test interno de disponibilidad TCP antes de arrancar Uvicorn, garantizamos que las migraciones y conexiones iniciales de SQLAlchemy nunca colisionen con un socket cerrado, estabilizando el sistema distribuido.
+
+---
+
+## [ENTRADA 17] Semana 4 - Día 2: Configuración de Alembic y Migraciones en PostgreSQL
+
+* **Fecha:** 4 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Configurar el sistema de control de versiones de bases de datos (Alembic) para gestionar la creación del esquema en PostgreSQL, separando la responsabilidad de inicialización de la base de datos del código de la API.
+* **Prompt Principal Utilizado:** *"antes de continuar. para hacer el commit, debo darle ctrl c primero? ademas para las notas que llevo (good notes), falto sintetizar la infromacion de alembic."*
+
+### Lo que produjo la IA:
+Una explicación detallada sobre el funcionamiento de Alembic (analogiado como un sistema de control de versiones o "revisiones de parches de PCB" frente al método destructivo de borrar bases de datos), además de la guía paso a paso para configurar los archivos `alembic.ini`, `migrations/env.py` y estructurar el paquete `app/models/__init__.py` para que la herramienta detectara correctamente la metadata.
+
+* **Uso de IA y Revisión de Código:** Utilicé a la IA para auditar las rutas de importación de SQLAlchemy y resolver el problema de resolución de nombres de red (`host 'db'` vs `localhost`) al ejecutar comandos de migración desde la máquina anfitriona (Windows) hacia el contenedor Docker.
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Se centralizaron las importaciones de `Base`, `SensorModel` y `ReadingModel` dentro del paquete `app/models/__init__.py` y se exportaron explícitamente con `__all__`.
+  *Por qué (Criterio Técnico):* Garantizamos que el inspector de Alembic (`env.py`) tenga visibilidad directa sobre la estructura de tablas de la aplicación sin depender de archivos dispersos, evitando falsos positivos de "tablas eliminadas" durante la autogeneración de esquemas.
+
+---
+
+## [ENTRADA 18] Semana 4 - Día 3: Implementación de Pipeline CI y Branch Protection
+
+* **Fecha:** 5 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Configurar un pipeline de Integración Continua (CI) usando GitHub Actions para automatizar el testing (pytest, ruff, mypy) y proteger la rama principal de código defectuoso.
+* **Prompt Principal Utilizado:** *"volvio a dar erro, ya que solo copie y pegue la linea que me diste y al aher git psuh y empzar el work flow, este dio error de nuevo en test linting with ruff, que dice: Run ruff check . F821 Undefined name `Base`"*
+
+### Lo que produjo la IA:
+La IA diagnosticó que el pipeline falló debido a errores de linteo (`F401 imported but unused`) dejados por refactorizaciones anteriores, y posteriormente por un `NameError` al faltar importaciones explícitas en el archivo de pruebas. Explicó que el entorno del CI en la nube es "aislado y virgen", por lo que los tests deben ser capaces de levantar y destruir su propia infraestructura en SQLite sin depender de herramientas externas como Alembic.
+
+* **Uso de IA y Revisión de Código:** Utilicé a la IA para analizar los logs de error del runner de GitHub (`ubuntu-latest`) y aplicar correcciones locales usando `ruff check . --fix` antes de hacer push (Shift-Left Testing).
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Se inyectó `Base.metadata.create_all(bind=engine)` directamente en `tests/test_api.py` junto con sus importaciones respectivas (`Base`, `engine`).
+  *Por qué (Criterio Técnico):* Para garantizar el aislamiento del entorno de pruebas. Al ejecutar la creación de tablas en el *setup* del archivo de pruebas, aseguramos que la base de datos temporal (SQLite) exista antes de que `TestClient` lance los *requests*, evitando el `OperationalError` en el servidor de CI que no tiene acceso a la base de datos de Docker Compose.
+
+---
+
+## [ENTRADA 19] Semana 4 - Día 4: IaC, Depuración en la Nube y Healthchecks en Render
+
+* **Fecha:** 6 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Desplegar la API SensorHub y su base de datos PostgreSQL en la nube (Render.com) utilizando Infraestructura como Código (IaC) mediante un archivo `render.yaml`, y lograr un pipeline de Continuous Deployment (CD) exitoso.
+* **Prompts Principales Utilizados:** 1. *"el log no finalizo con exito, ahora dice: ... psycopg.OperationalError: connection failed: connection to server at '127.0.0.1'"*
+  2. *"Deploy failed... Timed out after waiting for internal health check to return a successful response code at: ... /health"*
+
+### Lo que produjo la IA:
+Actuando como ingeniero SRE (Site Reliability Engineer), la IA me ayudó a leer y diagnosticar los logs de producción de Render. Primero, identificó que Alembic estaba intentando usar la URL local en lugar de la inyectada por la nube, y luego explicó por qué SQLAlchemy exigía el driver `psycopg2` heredado en lugar de nuestro moderno `psycopg3` (debido a los prefijos de URL de Render). Finalmente, diagnosticó que el orquestador de Render cancelaba el despliegue (Timeout) porque FastAPI devolvía un Error 404 al no tener programado un endpoint de salud (`/health`).
+
+* **Uso de IA y Revisión de Código:** Utilicé la IA para simular un proceso real de depuración DevOps, aislando fallas de red, corrigiendo configuración de drivers en SQLAlchemy y entendiendo la integración paralela entre GitHub Actions (CI) y Render (CD).
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Se modificó el `CMD` del `Dockerfile` para ejecutar `alembic upgrade head && uvicorn ...`.
+  *Por qué (Criterio Técnico):* En un entorno de producción efímero, es crítico garantizar que las tablas existan *antes* de que la API empiece a recibir tráfico, evitando que la aplicación se caiga por falta de esquema.
+  2. *Cambio:* Se creó un "Interruptor Cloud" en `migrations/env.py` para leer `DATABASE_URL` y forzar el reemplazo de `postgres://` o `postgresql://` por `postgresql+psycopg://`.
+  *Por qué (Criterio Técnico):* Para forzar el uso del driver moderno (`psycopg3`) que instalamos localmente y evitar que SQLAlchemy falle por no encontrar el módulo antiguo `psycopg2`.
+  3. *Cambio:* Se agregó un endpoint `@app.get("/health")` en `main.py`.
+  *Por qué (Criterio Técnico):* En la nube, los balanceadores de carga necesitan un "latido" (Heartbeat/Health Check) que devuelva un código HTTP 200 OK. Sin esto, Render asume que el contenedor está defectuoso, no enruta el puerto 8000 hacia el internet público y cancela el despliegue a los 15 minutos.
+
+---
+
+## [ENTRADA 20] Semana 4 - Día 5: Optimización de Imágenes con Multi-Stage Build y Smoke Testing en CI con PostgreSQL
+
+* **Fecha:** 8 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Reducir el tamaño de la imagen Docker de la aplicación por debajo de 200 MB mediante patrones *Multi-stage Build*, e integrar un *Smoke Test* automatizado en GitHub Actions que valide migraciones de Alembic y operaciones CRUD reales contra un servicio efímero de PostgreSQL.
+
+* **Prompts Principales Utilizados:**
+  1. *"instrucciones del dia 4... multi-stage build con imagen < 200 MB... y un smoke test contra PostgreSQL como service en Actions"*
+  2. *"alembic upgrade head... sqlalchemy.exc.ProgrammingError: (psycopg.errors.DuplicateTable) relation 'sensors' already exists"*
+  3. *"AssertionError: Fallo al crear lectura: {"detail":"Not Found"}"*
+
+### Lo que produjo la IA:
+La IA propuso una reestructuración completa del `Dockerfile` dividida en dos etapas (`builder` y `runner`), aislando el entorno virtual de la compilación de paquetes. Posteriormente, configuró un contenedor secundario de PostgreSQL 15 dentro del archivo `.github/workflows/ci.yml` en la sección `services`, redactando el script `tests/smoke_test.py` para inyectar transacciones de prueba. Durante la integración, la IA ayudó a diagnosticar un conflicto de interferencia donde Pytest (ejecutando en SQLite) colisionaba con las migraciones de Alembic en PostgreSQL, además de ajustar las rutas anidadas de la API (`/sensors/{id}/readings`).
+
+* **Uso de IA y Revisión de Código:** Se utilizó la IA como un osciloscopio de infraestructura para diagnosticar orden de ejecución en el pipeline, validar patrones de diseño RESTful en el Smoke Test y corregir reglas de tipado y formato impuestas por Mypy y Ruff.
+
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Se reemplazó el `Dockerfile` monolítico por una arquitectura de construcción multi-etapa utilizando `python:3.12-slim`.
+     *Por qué (Criterio Técnico):* En la etapa `builder` se instalan y compilan paquetes en `/opt/venv`, mientras que en la etapa `runner` solo se copia la carpeta compilada lista para producción. Esto elimina caché de `pip` y binarios temporales, logrando una imagen final ligera de ~140 MB (cumpliendo el límite < 200 MB).
+  2. *Cambio:* Se removió la variable global `DATABASE_URL` del workflow de CI y se aisló únicamente dentro de la variable del paso *Smoke Test*.
+     *Por qué (Criterio Técnico):* Pytest ejecutaba `Base.metadata.create_all()` al inicio, leyendo la URL global y creando las tablas en PostgreSQL a la fuerza. Cuando Alembic intentaba correr `upgrade head`, la tabla ya existía arrojando `DuplicateTable`. Al aislar la variable, Pytest utiliza SQLite en memoria y PostgreSQL queda virgen para Alembic.
+  3. *Cambio:* Se ajustaron las peticiones del `smoke_test.py` para enviar el campo `id` requerido por Pydantic y consumir la ruta anidada POST `/sensors/{sensor_id}/readings` con payload `{"value": 45.5, "unit": "C"}`.
+     *Por qué (Criterio Técnico):* La arquitectura de la API impone contratos estrictos de validación. El Smoke Test debía respetar fielmente el ruteo RESTful para probar la persistencia real sin falsos negativos.
+
+---
+
+## [ENTRADA 21] Semana 4 - Día 6: DevSecOps con Trivy, Bot Guardián y Protección de Entornos (GitHub Environments)
+
+* **Fecha:** 8 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Implementar la capa de DevSecOps en la cadena de CI/CD mediante el escaneo automatizado de vulnerabilidades (CVEs) con Trivy, alertas automáticas de fallos en producción y protección de la rama `main` mediante entornos restringidos.
+
+* **Prompts Principales Utilizados:**
+  1. *"GitHub Environments con protección de rama, escaneo de vulnerabilidades con trivy, issue automático si el pipeline falla en main"*
+  2. *"dentro de la pestaña de enviroments, me aparecen... chore/docker-setup... copilot"*
+
+### Lo que produjo la IA:
+La IA generó los bloques YAML para integrar la acción oficial de Trivy (`aquasecurity/trivy-action`), escaneando tanto la imagen `sensorhub:latest` como las dependencias de Python (`requirements.txt`) en busca de vulnerabilidades clasificadas como `HIGH` o `CRITICAL`. Adicionalmente, redactó un script en JavaScript usando `actions/github-script` con una compuerta lógica `if: failure() && github.ref == 'refs/heads/main'` para abrir tickets de soporte de forma automática cuando ocurran fallas en la rama principal.
+
+* **Uso de IA y Revisión de Código:** Se utilizó la IA para auditar los reportes de seguridad generados por Trivy y entender la administración de entornos de despliegue en GitHub, garantizando que el flujo de aprobación requiriera intervención humana antes del despliegue.
+
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Se añadió la etapa de construcción local `docker build -t sensorhub:latest .` y el escáner Trivy al pipeline de GitHub Actions.
+     *Por qué (Criterio Técnico):* Garantiza el cumplimiento de DevSecOps (Shift-Left Security), bloqueando o auditando imágenes antes de que sean distribuidas a la nube. El reporte arrojó **0 vulnerabilidades** en la imagen final.
+  2. *Cambio:* Se configuró el entorno `production` en las opciones del repositorio de GitHub con la regla *Required Reviewers* asignada al desarrollador, y se vinculó en el workflow mediante `environment: production`.
+     *Por qué (Criterio Técnico):* Implementa un freno de mano operacional (Quality Gate), evitando que cambios accidentales o no revisados se desplieguen automáticamente en producción sin autorización explícita.
+  3. *Cambio:* Se inyectó el script de notificación de fallos con etiquetas `['bug', 'urgente']`.
+     *Por qué (Criterio Técnico):* Proporciona trazabilidad inmediata (Observabilidad de CI/CD) al equipo de ingeniería al notificar el Hash del commit defectuoso y el enlace directo a los logs del error en caso de rupturas en `main`.

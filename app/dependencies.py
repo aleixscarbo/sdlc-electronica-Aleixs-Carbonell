@@ -17,6 +17,7 @@ def get_db() -> Generator[Session, None, None]:
     finally:
         db.close()
 
+
 def get_sensor_hub_service(db: Annotated[Session, Depends(get_db)]) -> SensorHubService:
     repo = SQLSensorHubRepository(db)
     return SensorHubService(repo)

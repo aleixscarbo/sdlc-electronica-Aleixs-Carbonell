@@ -5,6 +5,7 @@ from detector import SensorReading
 
 class SensorNotFoundError(Exception):
     """Excepción lanzada cuando se busca un sensor que no existe."""
+
     pass
 
 

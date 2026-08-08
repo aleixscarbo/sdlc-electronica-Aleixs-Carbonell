@@ -45,9 +45,14 @@ class SQLSensorHubRepository(SensorHubRepository):
     def get_reading(self, reading_id: int) -> ReadingModel | None:
         return self.session.get(ReadingModel, reading_id)
 
-    def list_readings(self, sensor_id: str, limit: int = 50, offset: int = 0, 
-                      from_date: datetime | None = None, 
-                      to_date: datetime | None = None) -> list[ReadingModel]:
+    def list_readings(
+        self,
+        sensor_id: str,
+        limit: int = 50,
+        offset: int = 0,
+        from_date: datetime | None = None,
+        to_date: datetime | None = None,
+    ) -> list[ReadingModel]:
         stmt = select(ReadingModel).where(ReadingModel.sensor_id == sensor_id)
         if from_date:
             stmt = stmt.where(ReadingModel.created_at >= from_date)

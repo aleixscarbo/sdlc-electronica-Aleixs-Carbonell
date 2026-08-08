@@ -1,49 +1,80 @@
 # 🛠️ Reto EDSIA: De Electrónica a Desarrollo de Software con IA
+
+[![CI](https://github.com/aleixscarbo/sdlc-electronica-Aleixs-Carbonell/actions/workflows/ci.yml/badge.svg)](https://github.com/aleixscarbo/sdlc-electronica-Aleixs-Carbonell/actions/workflows/ci.yml)
+
 **Estudiante:** Aleixs Carbonell Montaño  
-**Perfil:** Ingeniería en Instrumentación Electrónica (Universidad Veracruzana) ➡️ Desarrollo Backend Moderno
+**Perfil:** Ingeniería en Instrumentación Electrónica (Universidad Veracruzana) ➡️ Desarrollo Backend Moderno & DevOps
 
 ---
 
 ## 📖 Descripción del Proyecto
 
-Este repositorio documenta mi transición técnica desde la programación de sistemas embebidos (firmware y hardware) hacia la ingeniería de software backend profesional utilizando Python y metodologías modernas (TDD, control de versiones, entornos virtuales).
+Este repositorio documenta mi transición técnica desde la programación de sistemas embebidos (firmware y hardware) hacia la ingeniería de software backend profesional utilizando Python, FastAPI, SQLAlchemy, Docker, GitHub Actions y despliegue continuo en la nube.
 
-### 🏎️ Proyecto Destacado: El Driver UART Modernizado (Semana01)
-El proyecto principal de la Semana 1 es la refactorización de un **Driver UART**. Se migró de un enfoque procedural en C (basado en buffers globales) a un diseño orientado a objetos en Python, incorporando decodificadores polimórficos (Modbus, NMEA, CAN), concurrencia segura (`threading.Lock`) y persistencia en JSON-lines.
+### 🌐 Producción (API Desplegada en Vivo)
+
+La aplicación **SensorHub API** se encuentra desplegada en la nube utilizando infraestructura contenerizada (Docker) y base de datos PostgreSQL orquestada mediante Render:
+
+* **Swagger UI (Documentación Interactiva):** [https://sensorhub-api-bi65.onrender.com/docs](https://sensorhub-api-bi65.onrender.com/docs)
+* **Endpoint de Salud (Healthcheck):** [https://sensorhub-api-bi65.onrender.com/health](https://sensorhub-api-bi65.onrender.com/docs#/default/health_check_health_get)
 
 ---
 
-## 🚀 Instalación
+## 🏗️ Arquitectura y Tecnologías
 
-Para configurar el entorno de desarrollo de forma aislada, ejecuta en tu terminal:
+* **Backend Framework:** FastAPI (Python 3.12)
+* **Persistencia & ORM:** SQLAlchemy 2.x + PostgreSQL (Producción) / SQLite (Pruebas aisladas)
+* **Migraciones de Base de Datos:** Alembic
+* **Contenerización & Orquestación:** Docker, Docker Compose
+* **CI/CD:** GitHub Actions (Ruff, Mypy, Pytest con Cobertura ≥ 80%)
+* **Infraestructura como Código (IaC):** `render.yaml` (Blueprints)
 
-```cmd
+---
+
+## 🚀 Guía de Instalación y Ejecución Local
+
+### Opción 1: Entorno de Producción Local (Docker Compose)
+Para levantar la API junto con la base de datos PostgreSQL orquestados mediante un solo comando:
+
+```bash
+docker compose up --build
+```
+La API estará disponible en http://localhost:8000/docs.
+
+### Opción 2: Entorno Virtual Local (Desarrollo)
+
+```bash
 git clone [https://github.com/aleixscarbo/sdlc-electronica-Aleixs-Carbonell.git](https://github.com/aleixscarbo/sdlc-electronica-Aleixs-Carbonell.git)
 cd sdlc-electronica-Aleixs-Carbonell
 python -m venv venv
+
+# En Windows:
 call venv\Scripts\activate
+# En Linux/Mac:
+# source venv/bin/activate
+
 pip install -r requirements.txt
+alembic upgrade head
+uvicorn app.main:app --reload
 ```
 
----
+## Pruebas Automatizadas y Calidad de Código
+El proyecto incluye un pipeline estricto de Integración Continua (CI) que valida la calidad en cada push:
 
-## 🧪 Cómo correr los tests
+```bash
+# Ejecutar suite de pruebas con cobertura
+pytest --cov=app --cov-fail-under=80
 
-El proyecto fue construido bajo la filosofía de Desarrollo Guiado por Pruebas (TDD). Para ejecutar la suite de **12 pruebas unitarias** que validan la resiliencia del hardware emulado y verificar el tipado/estilo, utiliza:
+# Verificación de tipos estáticos
+mypy app --ignore-missing-imports
 
-```cmd
-pytest semana01/uart_driver/tests/ -v
-mypy semana01/
-ruff check semana01/
+# Linter y formateador
+ruff check .
 ```
 
----
+## Reflexión SOLID y DevOps
+1. Inversión de Dependencias (DIP) & 12-Factor App: La configuración de la base de datos lee dinámicamente DATABASE_URL desde el entorno (os.getenv), aislando credenciales y adaptando los drivers según el entorno (SQLite para pruebas, PostgreSQL para Docker/Render).
 
-## 🧠 Reflexión SOLID
+2. Infraestructura Reproducible: La migración de base de datos se desacopló del código principal de la API mediante Alembic, ejecutándose como un paso previo atómico durante el arranque del contenedor.
 
-La adopción de los principios SOLID fue fundamental para crear un software de grado industrial:
-1. **SRP:** El controlador de hardware (`UartDevice`) se separó del guardado de datos (`DataRecorder`).
-2. **OCP:** El sistema procesa abstracciones (`MessageParser`), lo que me permitió agregar el protocolo **CAN Bus** sin modificar la lógica existente.
-3. **LSP:** Todos los decodificadores respetan estrictamente los tipos de retorno de la clase base, evitando excepciones inesperadas.
-4. **ISP:** Se dividieron interfaces gigantes en micro-contratos lógicos (`Readable`, `Writable`).
-5. **DIP:** Gracias a la inyección de dependencias (`Protocol`), se desacopló el hardware real, permitiendo inyectar repositorios en memoria (RAM) para correr pruebas en milisegundos.
+3. Shift-Left Testing & Observabilidad: Se implementó un endpoint dedicado /health para pruebas de salud del orquestador en producción, garantizando cero downtime y despliegues seguros.

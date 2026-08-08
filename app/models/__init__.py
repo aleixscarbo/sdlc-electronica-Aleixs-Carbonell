@@ -29,7 +29,14 @@ class ReadingModel(Base):
     unit: Mapped[str] = mapped_column(String(10))
     # CAMBIO 2: Forzamos la zona horaria UTC explícitamente con lambda
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc))
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
 
     # Relación: Una lectura pertenece a un sensor
     sensor: Mapped["SensorModel"] = relationship(back_populates="readings")
+
+
+# --- INYECCIÓN PARA ALEMBIC ---
+# Forzamos explícitamente la exportación de estos componentes
+# para que la herramienta de migraciones los detecte al leer el paquete.
+__all__ = ["Base", "SensorModel", "ReadingModel"]

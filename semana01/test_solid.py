@@ -24,6 +24,7 @@ def test_srp_reader_responsibility() -> None:
     assert reading.sensor_id == "SNS-01"
     assert reading.value == 25.0
 
+
 def test_srp_logger_responsibility() -> None:
     # Arrange
     logger = DataLogger()
@@ -44,6 +45,7 @@ def test_ocp_console_alert_strategy() -> None:
     # Assert
     assert result == "Console: Anomalia en SNS-TEMP"
 
+
 def test_ocp_file_alert_strategy() -> None:
     # Arrange
     detector = AnomalyDetector(FileAlert(), threshold=40.0)
@@ -62,6 +64,7 @@ def test_lsp_interchangeable_sensors() -> None:
     # Act & Assert (Ambos funcionan idénticamente en la función cliente)
     assert process_sensor(t_sensor) == 36.5
     assert process_sensor(h_sensor) == 60.2
+
 
 def test_lsp_breakage_demonstration() -> None:
     # Arrange

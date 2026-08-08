@@ -16,6 +16,7 @@ def test_isp_simple_sensor() -> None:
     # Assert: El sensor funciona sin verse obligado a implementar calibrate()
     assert val == 22.5
 
+
 def test_isp_smart_thermostat() -> None:
     # Arrange
     thermostat = SmartThermostat()
@@ -25,6 +26,7 @@ def test_isp_smart_thermostat() -> None:
     # Assert: Implementa limpiamente interfaces múltiples
     assert thermostat.read() == 0.0
 
+
 # --- PRUEBAS DIP ---
 def test_dip_processor_with_in_memory_repo() -> None:
     # Arrange
@@ -32,11 +34,11 @@ def test_dip_processor_with_in_memory_repo() -> None:
     test_repo = InMemoryRepository()
     processor = DataProcessor(test_repo)
     reading = SensorReading("SNS-100", 45.5)
-    
+
     # Act
     processor.process_and_save(reading)
     retrieved = processor.retrieve_last("SNS-100")
-    
+
     # Assert
     assert retrieved is not None
     assert retrieved.value == 45.5
