@@ -15,11 +15,11 @@ client = TestClient(app)
 def run_smoke_test():
     print("Iniciando Smoke Test contra PostgreSQL...")
     
-    # 1. Crear un Sensor
+    # 1. Crear un Sensor (Agregamos el campo 'id' obligatorio)
     print("1. Creando Sensor...")
     sensor_data = {
+        "id": "smoke-test-001",
         "name": "Smoke Sensor",
-        "location": "Servidor CI",
         "type": "temperature",
     }
     response = client.post("/sensors/", json=sensor_data)
