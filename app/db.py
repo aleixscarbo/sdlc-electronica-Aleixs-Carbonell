@@ -1,8 +1,8 @@
-# Configuración del motor (Engine)
 import os
+from collections.abc import Generator
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 
 def get_database_url() -> str:
@@ -19,20 +19,28 @@ def get_database_url() -> str:
 
 SQLALCHEMY_DATABASE_URL = get_database_url()
 
-# El "puerto serial" hacia nuestra memoria no volátil
-# Evaluamos dinámicamente si estamos en SQLite o PostgreSQL
+# Evaluamos dinamicamente si estamos en SQLite o PostgreSQL
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
     engine = create_engine(
         SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
     )
 else:
-    # PostgreSQL no necesita ni soporta check_same_thread
+    # PostgreSQL no necesita check_same_thread
     engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
-# La fábrica de "transacciones" (Start bit / Stop bit)
+# Fabrica de sesiones
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 
-# La placa base de donde heredarán todos los modelos
+# Clase base para los modelos SQLAlchemy
 class Base(DeclarativeBase):
     pass
+
+
+# Generador de sesiones para inyeccion de dependencias en FastAPI
+def get_db() -> Generator[Session, None, None]:
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

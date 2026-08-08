@@ -31,10 +31,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-    # ---> NUEVO: CONFIGURAR VARIABLE PARA EL SMOKE TEST Y MIGRACIONES <---
-    env:
-      DATABASE_URL: postgresql+psycopg://sensor:secretpassword@localhost:5432/sensorhub_test
-
     steps:
       # Paso 1: Descargar tu código al servidor de GitHub
       - uses: actions/checkout@v4
@@ -66,6 +62,8 @@ jobs:
 
       # ---> NUEVO: PASO 7 - SMOKE TEST CONTRA POSTGRESQL REAL (EXTENSIÓN) <---
       - name: Smoke Test (PostgreSQL Real)
+        env:
+          DATABASE_URL: postgresql+psycopg://sensor:secretpassword@localhost:5432/sensorhub_test
         run: |
           echo "Corriendo migraciones en PostgreSQL..."
           alembic upgrade head
