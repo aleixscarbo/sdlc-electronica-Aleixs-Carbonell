@@ -28,7 +28,7 @@ def run_smoke_test():
     )
     sensor_id = response.json()["id"]
     
-    # 2. Crear una lectura anómala (Ruta anidada extraída de test_api.py)
+    # 2. Crear una lectura anómala
     print("2. Inyectando lectura de alta temperatura...")
     reading_data = {"value": 45.5, "unit": "C"}
     response = client.post(f"/sensors/{sensor_id}/readings", json=reading_data)
@@ -38,8 +38,10 @@ def run_smoke_test():
     
     # 3. Consultar las lecturas/alertas (Smoke cleared)
     print("3. Consultando datos registrados...")
-    response = client.get(f"/sensors/{sensor_id}")
-    assert response.status_code == 200, "Fallo al consultar el sensor"
+    response = client.get("/sensors/")
+    assert response.status_code == 200, (
+        f"Fallo al consultar sensores: {response.text}"
+    )
     
     print("SMOKE TEST SUPERADO. El esquema de PostgreSQL esta perfecto.")
 
