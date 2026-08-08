@@ -14,6 +14,7 @@ jobs:
   test:
     # El entorno virtual donde correrá el robot (un servidor Linux en la nube)
     runs-on: ubuntu-latest
+    environment: production #Agregamos un entorno de producción para el pipeline
 
     # ---> NUEVO: INYECTAR POSTGRESQL EN EL PIPELINE (EXTENSIÓN) <---
     services:
@@ -85,3 +86,17 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
+
+      # Paso 9 - BOT GUARDIÁN   
+      - name: Crear Issue si el Pipeline falla en MAIN
+        if: failure() && github.ref == 'refs/heads/main'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Pipeline Roto en Producción (MAIN)',
+              body: `El pipeline de CI/CD falló en el commit ${context.sha}.\n\nRevisa los logs de inmediato aquí: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              labels: ['bug', 'urgente']
+            })
