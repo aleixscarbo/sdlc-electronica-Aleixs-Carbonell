@@ -16,7 +16,7 @@ Este repositorio documenta mi transición técnica desde la programación de sis
 La aplicación **SensorHub API** se encuentra desplegada en la nube utilizando infraestructura contenerizada (Docker) y base de datos PostgreSQL orquestada mediante Render:
 
 * **Swagger UI (Documentación Interactiva):** [https://sensorhub-api-bi65.onrender.com/docs](https://sensorhub-api-bi65.onrender.com/docs)
-* **Endpoint de Salud (Healthcheck):** [https://sensorhub-api-bi65.onrender.com/health](https://sensorhub-api-bi65.onrender.com/health)
+* **Endpoint de Salud (Healthcheck):** [https://sensorhub-api-bi65.onrender.com/health](https://sensorhub-api-bi65.onrender.com/docs#/default/health_check_health_get)
 
 ---
 
