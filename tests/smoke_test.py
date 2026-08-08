@@ -15,7 +15,7 @@ client = TestClient(app)
 def run_smoke_test():
     print("Iniciando Smoke Test contra PostgreSQL...")
     
-    # 1. Crear un Sensor (Agregamos el campo 'id' obligatorio)
+    # 1. Crear un Sensor
     print("1. Creando Sensor...")
     sensor_data = {
         "id": "smoke-test-001",
@@ -28,10 +28,10 @@ def run_smoke_test():
     )
     sensor_id = response.json()["id"]
     
-    # 2. Crear una lectura anómala (alta temperatura)
+    # 2. Crear una lectura anómala (Ruta anidada extraída de test_api.py)
     print("2. Inyectando lectura de alta temperatura...")
-    reading_data = {"sensor_id": sensor_id, "value": 45.5}
-    response = client.post("/readings/", json=reading_data)
+    reading_data = {"value": 45.5, "unit": "C"}
+    response = client.post(f"/sensors/{sensor_id}/readings", json=reading_data)
     assert response.status_code in [200, 201], (
         f"Fallo al crear lectura: {response.text}"
     )
