@@ -60,7 +60,7 @@ jobs:
       - name: Unit Tests
         run: pytest --cov=app --cov-fail-under=80
 
-      # ---> NUEVO: PASO 7 - SMOKE TEST CONTRA POSTGRESQL REAL (EXTENSIÓN) <---
+      # Paso 7 - SMOKE TEST CONTRA POSTGRESQL REAL
       - name: Smoke Test (PostgreSQL Real)
         env:
           DATABASE_URL: postgresql+psycopg://sensor:secretpassword@localhost:5432/sensorhub_test
@@ -69,3 +69,19 @@ jobs:
           alembic upgrade head
           echo "Ejecutando Smoke Test..."
           python tests/smoke_test.py
+
+      # Paso 8 - EXTENSIÓN DevSecOps
+      # (Desarrollo, Seguridad y Operaciones).
+      - name: Construir imagen Docker local para escaneo
+        run: docker build -t sensorhub:latest .
+
+      - name: Escáner de Vulnerabilidades Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'sensorhub:latest'
+          format: 'table'
+          # Lo ponemos en 0 para auditar. En un entorno mega estricto se pone en 1 para que falle si encuentra algo.
+          exit-code: '0' 
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
