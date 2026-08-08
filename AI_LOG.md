@@ -330,3 +330,52 @@ Actuando como ingeniero SRE (Site Reliability Engineer), la IA me ayudó a leer 
   *Por qué (Criterio Técnico):* Para forzar el uso del driver moderno (`psycopg3`) que instalamos localmente y evitar que SQLAlchemy falle por no encontrar el módulo antiguo `psycopg2`.
   3. *Cambio:* Se agregó un endpoint `@app.get("/health")` en `main.py`.
   *Por qué (Criterio Técnico):* En la nube, los balanceadores de carga necesitan un "latido" (Heartbeat/Health Check) que devuelva un código HTTP 200 OK. Sin esto, Render asume que el contenedor está defectuoso, no enruta el puerto 8000 hacia el internet público y cancela el despliegue a los 15 minutos.
+
+---
+
+## [ENTRADA 20] Semana 4 - Día 5: Optimización de Imágenes con Multi-Stage Build y Smoke Testing en CI con PostgreSQL
+
+* **Fecha:** 8 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Reducir el tamaño de la imagen Docker de la aplicación por debajo de 200 MB mediante patrones *Multi-stage Build*, e integrar un *Smoke Test* automatizado en GitHub Actions que valide migraciones de Alembic y operaciones CRUD reales contra un servicio efímero de PostgreSQL.
+
+* **Prompts Principales Utilizados:**
+  1. *"instrucciones del dia 4... multi-stage build con imagen < 200 MB... y un smoke test contra PostgreSQL como service en Actions"*
+  2. *"alembic upgrade head... sqlalchemy.exc.ProgrammingError: (psycopg.errors.DuplicateTable) relation 'sensors' already exists"*
+  3. *"AssertionError: Fallo al crear lectura: {"detail":"Not Found"}"*
+
+### Lo que produjo la IA:
+La IA propuso una reestructuración completa del `Dockerfile` dividida en dos etapas (`builder` y `runner`), aislando el entorno virtual de la compilación de paquetes. Posteriormente, configuró un contenedor secundario de PostgreSQL 15 dentro del archivo `.github/workflows/ci.yml` en la sección `services`, redactando el script `tests/smoke_test.py` para inyectar transacciones de prueba. Durante la integración, la IA ayudó a diagnosticar un conflicto de interferencia donde Pytest (ejecutando en SQLite) colisionaba con las migraciones de Alembic en PostgreSQL, además de ajustar las rutas anidadas de la API (`/sensors/{id}/readings`).
+
+* **Uso de IA y Revisión de Código:** Se utilizó la IA como un osciloscopio de infraestructura para diagnosticar orden de ejecución en el pipeline, validar patrones de diseño RESTful en el Smoke Test y corregir reglas de tipado y formato impuestas por Mypy y Ruff.
+
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Se reemplazó el `Dockerfile` monolítico por una arquitectura de construcción multi-etapa utilizando `python:3.12-slim`.
+     *Por qué (Criterio Técnico):* En la etapa `builder` se instalan y compilan paquetes en `/opt/venv`, mientras que en la etapa `runner` solo se copia la carpeta compilada lista para producción. Esto elimina caché de `pip` y binarios temporales, logrando una imagen final ligera de ~140 MB (cumpliendo el límite < 200 MB).
+  2. *Cambio:* Se removió la variable global `DATABASE_URL` del workflow de CI y se aisló únicamente dentro de la variable del paso *Smoke Test*.
+     *Por qué (Criterio Técnico):* Pytest ejecutaba `Base.metadata.create_all()` al inicio, leyendo la URL global y creando las tablas en PostgreSQL a la fuerza. Cuando Alembic intentaba correr `upgrade head`, la tabla ya existía arrojando `DuplicateTable`. Al aislar la variable, Pytest utiliza SQLite en memoria y PostgreSQL queda virgen para Alembic.
+  3. *Cambio:* Se ajustaron las peticiones del `smoke_test.py` para enviar el campo `id` requerido por Pydantic y consumir la ruta anidada POST `/sensors/{sensor_id}/readings` con payload `{"value": 45.5, "unit": "C"}`.
+     *Por qué (Criterio Técnico):* La arquitectura de la API impone contratos estrictos de validación. El Smoke Test debía respetar fielmente el ruteo RESTful para probar la persistencia real sin falsos negativos.
+
+---
+
+## [ENTRADA 21] Semana 4 - Día 6: DevSecOps con Trivy, Bot Guardián y Protección de Entornos (GitHub Environments)
+
+* **Fecha:** 8 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Implementar la capa de DevSecOps en la cadena de CI/CD mediante el escaneo automatizado de vulnerabilidades (CVEs) con Trivy, alertas automáticas de fallos en producción y protección de la rama `main` mediante entornos restringidos.
+
+* **Prompts Principales Utilizados:**
+  1. *"GitHub Environments con protección de rama, escaneo de vulnerabilidades con trivy, issue automático si el pipeline falla en main"*
+  2. *"dentro de la pestaña de enviroments, me aparecen... chore/docker-setup... copilot"*
+
+### Lo que produjo la IA:
+La IA generó los bloques YAML para integrar la acción oficial de Trivy (`aquasecurity/trivy-action`), escaneando tanto la imagen `sensorhub:latest` como las dependencias de Python (`requirements.txt`) en busca de vulnerabilidades clasificadas como `HIGH` o `CRITICAL`. Adicionalmente, redactó un script en JavaScript usando `actions/github-script` con una compuerta lógica `if: failure() && github.ref == 'refs/heads/main'` para abrir tickets de soporte de forma automática cuando ocurran fallas en la rama principal.
+
+* **Uso de IA y Revisión de Código:** Se utilizó la IA para auditar los reportes de seguridad generados por Trivy y entender la administración de entornos de despliegue en GitHub, garantizando que el flujo de aprobación requiriera intervención humana antes del despliegue.
+
+* **Lo que cambié respecto a lo generado y el porqué:**
+  1. *Cambio:* Se añadió la etapa de construcción local `docker build -t sensorhub:latest .` y el escáner Trivy al pipeline de GitHub Actions.
+     *Por qué (Criterio Técnico):* Garantiza el cumplimiento de DevSecOps (Shift-Left Security), bloqueando o auditando imágenes antes de que sean distribuidas a la nube. El reporte arrojó **0 vulnerabilidades** en la imagen final.
+  2. *Cambio:* Se configuró el entorno `production` en las opciones del repositorio de GitHub con la regla *Required Reviewers* asignada al desarrollador, y se vinculó en el workflow mediante `environment: production`.
+     *Por qué (Criterio Técnico):* Implementa un freno de mano operacional (Quality Gate), evitando que cambios accidentales o no revisados se desplieguen automáticamente en producción sin autorización explícita.
+  3. *Cambio:* Se inyectó el script de notificación de fallos con etiquetas `['bug', 'urgente']`.
+     *Por qué (Criterio Técnico):* Proporciona trazabilidad inmediata (Observabilidad de CI/CD) al equipo de ingeniería al notificar el Hash del commit defectuoso y el enlace directo a los logs del error en caso de rupturas en `main`.
