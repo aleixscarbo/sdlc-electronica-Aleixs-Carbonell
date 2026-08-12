@@ -379,3 +379,17 @@ La IA generó los bloques YAML para integrar la acción oficial de Trivy (`aquas
      *Por qué (Criterio Técnico):* Implementa un freno de mano operacional (Quality Gate), evitando que cambios accidentales o no revisados se desplieguen automáticamente en producción sin autorización explícita.
   3. *Cambio:* Se inyectó el script de notificación de fallos con etiquetas `['bug', 'urgente']`.
      *Por qué (Criterio Técnico):* Proporciona trazabilidad inmediata (Observabilidad de CI/CD) al equipo de ingeniería al notificar el Hash del commit defectuoso y el enlace directo a los logs del error en caso de rupturas en `main`.
+
+---
+
+## [ENTRADA 22] Semana 5 - Día 1: Ingeniería de Prompts (A/B Testing)
+
+* **Fecha:** 12 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Contrastar la calidad del código generado por LLMs usando instrucciones genéricas vs. el patrón estructurado `[Contexto + Tarea + Restricciones + Entrega]`. Se evaluaron 3 capas críticas de SensorHub: Validación física (Pydantic), Consultas analíticas (SQLAlchemy 2.0) y Pruebas E2E (Pytest).
+
+### Análisis de la Interacción:
+* **Prompt Estructurado:** Se forzó a la IA a actuar bajo restricciones de versión (Python 3.12, SQLAlchemy 2.x) y a entregar resultados sin explicaciones.
+* **Respuesta de la IA (Contraste):**
+  * *Prompt Pobre:* Generó código obsoleto (sintaxis vieja de bases de datos), ignoró los type hints y añadió "charlatanería" (texto innecesario). En Pydantic, no controló profesionalmente la excepción.
+  * *Prompt Bueno:* Entregó código de grado de producción. Respetó `func.avg` de SQLAlchemy 2.0, estructuró la prueba de integración con el patrón Arrange-Act-Assert (AAA) y obedeció la restricción de omitir texto adicional.
+* **Veredicto y Criterio Técnico:** Se comprueba empíricamente que un LLM optimiza plausibilidad, no corrección. Si no se acota el espacio de soluciones, alucinará convenciones obsoletas. Como Ingeniero de Software, asumo la responsabilidad del "contexto"; el código generado solo es tan bueno como las restricciones arquitectónicas que le impongo. El código del prompt estructurado pasa el criterio para ser revisado en un PR, el del pobre es rechazado.
