@@ -414,3 +414,16 @@ La IA generó los bloques YAML para integrar la acción oficial de Trivy (`aquas
   * Se ACEPTARON los hallazgos relacionados estrictamente con la lógica de negocio (Fechas ilógicas, manejo de excepciones de base de datos y la sugerencia de Soft Delete).
 * **Impacto en Testing:** La IA generó 7 sub-tests para cubrir casos borde (sensores inexistentes, valores numéricos infinitos `float('inf')`, duplicidad de IDs). Se implementó `unittest.mock.MagicMock` para aislar el repositorio.
 * **Veredicto y Criterio Técnico:** El uso de IA es excepcional para la generación de casos de prueba paramétricos y detección de flujos anómalos. La cobertura de la capa de Servicios aumentó a 97% y la cobertura global a 90.53%. Se reafirma la regla del "Colega Junior": la IA escribe las pruebas, pero el Ingeniero defiende la arquitectura.
+
+---
+
+## [ENTRADA 25] Semana 5 - Misión Secundaria: Refactorización y Deuda Técnica (FastAPI/Starlette)
+
+* **Fecha:** 13 de Agosto de 2026
+* **Rama de trabajo:** `refactor/test-coverage`
+* **Contexto/Objetivo de la Sesión:** Eliminar la deuda técnica manifestada en el aviso `StarletteDeprecationWarning` al ejecutar la suite de pruebas y preparar el terreno para aumentar la cobertura de la base de datos a un estándar $>95\%$.
+* **Análisis Forense (Modernización de Tests):**
+  * *El Problema:* El uso del cliente síncrono `TestClient` de FastAPI/Starlette está deprecado cuando se combina con versiones modernas de `httpx`.
+  * *La Intervención:* Se utilizó Copilot para analizar los archivos `tests/test_api.py` y `tests/smoke_test.py`.
+  * *Resultado Técnico:* La IA propuso correctamente la migración del ecosistema de pruebas a un paradigma 100% asíncrono utilizando `httpx.AsyncClient` acoplado con `ASGITransport`. Se reescribieron los tests utilizando decoradores `@pytest.mark.anyio` y corrutinas `async def`.
+* **Veredicto y Criterio Técnico:** El refactor fue un éxito absoluto. La terminal ahora reporta 0 warnings y la suite se ejecuta en $<5$ segundos. Esta intervención demuestra que el código generado por IA no solo sirve para crear funcionalidades (features), sino que es una herramienta de primer nivel para **mantenimiento adaptativo** frente a librerías de terceros que evolucionan y rompen la compatibilidad hacia atrás.
