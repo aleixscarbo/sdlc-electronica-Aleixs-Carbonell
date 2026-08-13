@@ -427,3 +427,15 @@ La IA generó los bloques YAML para integrar la acción oficial de Trivy (`aquas
   * *La Intervención:* Se utilizó Copilot para analizar los archivos `tests/test_api.py` y `tests/smoke_test.py`.
   * *Resultado Técnico:* La IA propuso correctamente la migración del ecosistema de pruebas a un paradigma 100% asíncrono utilizando `httpx.AsyncClient` acoplado con `ASGITransport`. Se reescribieron los tests utilizando decoradores `@pytest.mark.anyio` y corrutinas `async def`.
 * **Veredicto y Criterio Técnico:** El refactor fue un éxito absoluto. La terminal ahora reporta 0 warnings y la suite se ejecuta en $<5$ segundos. Esta intervención demuestra que el código generado por IA no solo sirve para crear funcionalidades (features), sino que es una herramienta de primer nivel para **mantenimiento adaptativo** frente a librerías de terceros que evolucionan y rompen la compatibilidad hacia atrás.
+
+---
+
+## [ENTRADA 26] Semana 5 - Misión Secundaria: Cobertura Extrema en Persistencia y Failover de IA
+
+* **Fecha:** 13 de Agosto de 2026
+* **Rama de trabajo:** `refactor/test-coverage`
+* **Contexto/Objetivo de la Sesión:** Atacar la deuda de cobertura en los archivos de infraestructura (`app/db.py` y `app/repositories/sql.py`) que contaban con un 70% y 86% respectivamente.
+* **Incidencia Técnica y Failover:** Durante la ejecución, el agente primario (GitHub Copilot) alcanzó su límite mensual de créditos (HTTP 429 Too Many Requests / Quota Exceeded). Como plan de contingencia (failover), se migró el contexto inmediatamente a Gemini para continuar la generación de código sin romper el flujo de trabajo.
+* **Análisis Forense (Mocking de Base de Datos):** * Se diseñó el archivo `tests/test_db_and_repo.py` aislando por completo la base de datos real.
+  * Se empleó `unittest.mock.MagicMock` y `patch` para simular las variables de entorno de Render (`DATABASE_URL`), el generador de sesiones (`SessionLocal`) y los retornos vacíos (`None`) de SQLAlchemy.
+* **Veredicto y Criterio Técnico:** Se superó la barrera del 95% de cobertura global (95.06%), probando satisfactoriamente caminos de error en la BD sin necesidad de levantar un motor real. Se comprobó que tener redundancia de LLMs (Copilot + Gemini) es crítico para mantener la continuidad operativa en el desarrollo asistido por IA.
