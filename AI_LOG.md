@@ -393,3 +393,14 @@ La IA generó los bloques YAML para integrar la acción oficial de Trivy (`aquas
   * *Prompt Pobre:* Generó código obsoleto (sintaxis vieja de bases de datos), ignoró los type hints y añadió "charlatanería" (texto innecesario). En Pydantic, no controló profesionalmente la excepción.
   * *Prompt Bueno:* Entregó código de grado de producción. Respetó `func.avg` de SQLAlchemy 2.0, estructuró la prueba de integración con el patrón Arrange-Act-Assert (AAA) y obedeció la restricción de omitir texto adicional.
 * **Veredicto y Criterio Técnico:** Se comprueba empíricamente que un LLM optimiza plausibilidad, no corrección. Si no se acota el espacio de soluciones, alucinará convenciones obsoletas. Como Ingeniero de Software, asumo la responsabilidad del "contexto"; el código generado solo es tan bueno como las restricciones arquitectónicas que le impongo. El código del prompt estructurado pasa el criterio para ser revisado en un PR, el del pobre es rechazado.
+
+---
+
+## [ENTRADA 23] Semana 5 - Día 2: Ensayo con Agentes Autónomos e Incompatibilidad de Dependencias
+
+* **Fecha:** 12 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Instalar y ejecutar Aider acoplado a Gemini 1.5 Pro en la terminal para pair programming automatizado.
+* **Incidencia Técnica:** Falla de compilación durante `pip install aider-chat`.
+* **Análisis Forense:** El proceso colapsa al intentar construir la rueda (wheel) de la dependencia `numpy==1.24.3`. El error `AttributeError: module 'pkgutil' has no attribute 'ImpImporter'` revela que la versión de Python del sistema (3.14+) ha deprecado módulos que las librerías antiguas de Aider aún necesitan para compilar desde el código fuente en Windows.
+* **Resolución y Criterio:** Siguiendo la premisa de la Guía del Estudiante, se aborta la instalación local para evitar corromper el entorno virtual y se procede a realizar el ejercicio equivalente utilizando GitHub Copilot Chat directamente en VS Code. El foco se mantiene en la arquitectura y la trazabilidad, no en la herramienta específica.
+
