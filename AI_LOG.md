@@ -404,3 +404,13 @@ La IA generó los bloques YAML para integrar la acción oficial de Trivy (`aquas
 * **Análisis Forense:** El proceso colapsa al intentar construir la rueda (wheel) de la dependencia `numpy==1.24.3`. El error `AttributeError: module 'pkgutil' has no attribute 'ImpImporter'` revela que la versión de Python del sistema (3.14+) ha deprecado módulos que las librerías antiguas de Aider aún necesitan para compilar desde el código fuente en Windows.
 * **Resolución y Criterio:** Siguiendo la premisa de la Guía del Estudiante, se aborta la instalación local para evitar corromper el entorno virtual y se procede a realizar el ejercicio equivalente utilizando GitHub Copilot Chat directamente en VS Code. El foco se mantiene en la arquitectura y la trazabilidad, no en la herramienta específica.
 
+---
+
+## [ENTRADA 24] Semana 5 - Día 3: Code Review y Testing Asistido por IA (Mocks)
+
+* **Fecha:** 13 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Utilizar Copilot como auditor de código estricto sobre `app/services/core.py` para detectar vulnerabilidades, violaciones SOLID y casos borde, forzando la generación de pruebas unitarias aisladas (`Mocks`).
+* **Análisis Forense (Code Review):** * La IA arrojó 7 hallazgos. Se demostró que la IA carece de contexto arquitectónico global, sugiriendo blindajes contra SQL Injection o validación de paginación en la capa de Servicios, ignorando que SQLAlchemy y Pydantic (en Routers) ya manejan esos vectores de ataque. Esos hallazgos fueron RECHAZADOS con justificación técnica.
+  * Se ACEPTARON los hallazgos relacionados estrictamente con la lógica de negocio (Fechas ilógicas, manejo de excepciones de base de datos y la sugerencia de Soft Delete).
+* **Impacto en Testing:** La IA generó 7 sub-tests para cubrir casos borde (sensores inexistentes, valores numéricos infinitos `float('inf')`, duplicidad de IDs). Se implementó `unittest.mock.MagicMock` para aislar el repositorio.
+* **Veredicto y Criterio Técnico:** El uso de IA es excepcional para la generación de casos de prueba paramétricos y detección de flujos anómalos. La cobertura de la capa de Servicios aumentó a 97% y la cobertura global a 90.53%. Se reafirma la regla del "Colega Junior": la IA escribe las pruebas, pero el Ingeniero defiende la arquitectura.

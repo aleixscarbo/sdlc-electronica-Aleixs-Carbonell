@@ -12,7 +12,7 @@ from app.main import app
 client = TestClient(app)
 
 
-def run_smoke_test():
+def run_smoke_test() -> None:
     print("Iniciando Smoke Test contra PostgreSQL...")
     
     # 1. Crear un Sensor
