@@ -1,12 +1,12 @@
 """
 Pruebas Unitarias para Detección de Anomalías (TDD - Fase RED)
 """
-import pytest
 from unittest.mock import MagicMock
 
-from app.services.core import SensorHubService
-from app.repositories.base import SensorHubRepository
 from app.models import SensorModel
+from app.repositories.base import SensorHubRepository
+from app.services.core import SensorHubService
+
 
 def test_record_reading_triggers_alert_when_exceeding_threshold() -> None:
     # Arrange: Simulamos un sensor con un umbral (threshold) de 30.0
