@@ -442,7 +442,7 @@ La IA generó los bloques YAML para integrar la acción oficial de Trivy (`aquas
 
 ---
 
-## [ENTRADA 25] Semana 5 - Día 4: Documentación Arquitectónica (ADR) y Evaluación Monolito vs Microservicios
+## [ENTRADA 27] Semana 5 - Día 4: Documentación Arquitectónica (ADR) y Evaluación Monolito vs Microservicios
 
 * **Fecha:** 14 de Agosto de 2026
 * **Contexto/Objetivo de la Sesión:** Redactar el primer Architecture Decision Record (ADR 0001) para formalizar la elección de la Arquitectura en Capas en SensorHub y sintetizar las lecturas de Martin Fowler (*Microservices* y *MonolithFirst*).
@@ -451,4 +451,20 @@ La IA generó los bloques YAML para integrar la acción oficial de Trivy (`aquas
 * **Generación del ADR:** Se estructuró el documento bajo el estándar Nygard (Estado, Contexto, Decisión, Consecuencias). Se enfatizó que la capa de servicio se abstrae mediante `Protocol` (DIP), lo que posibilitó la suite de 18 pruebas automatizadas con 95.06% de cobertura alcanzada en sesiones previas.
 * **Evaluación Arquitectónica (Fowler):** Se fundamentó por qué SensorHub debe ser un *Monolito Modular* y no una red de microservicios. Crear microservicios prematuros para un sistema de telemetría IoT inicial introduciría la "prima de complejidad de microservicios" (latencia de red, consistencia eventual, fallos distribuidos) sin obtener beneficios de escala organizacional.
 * **Decisión de Ingeniería:** Se aprueba el ADR 0001 en el repositorio como documento vivo de diseño. La arquitectura actual se defenderá como monolito modular desacoplado en la evaluación síncrona.
+
+---
+
+## [ENTRADA 28] Semana 5 - Día 5: Ejercicio Integrador (Feature de Anomalías con TDD y OCP)
+
+* **Fecha:** 14 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Desarrollar una funcionalidad de extremo a extremo para la detección y notificación de anomalías (umbrales térmicos) usando TDD estricto y la IA como "Pair Programmer".
+* **Estrategia de Prompts (Fases):**
+  1. *Fase RED:* Se solicitó a la IA generar pruebas unitarias aisladas simulando la inyección de una estrategia de alertas y un sensor con `threshold`.
+  2. *Fase GREEN:* Se solicitó implementar el patrón *Strategy* (`AlertStrategy`, `DatabaseAlertStrategy`) y modificar `SensorHubService` para aislar la lógica y pasar las pruebas.
+  3. *Fase REFACTOR/INTEGRATION:* Se solicitaron las modificaciones estructurales en los modelos SQLAlchemy, esquemas Pydantic y el Router para persistir y exponer la API.
+* **Qué generó la IA y qué se cambió (Criterio Técnico):**
+  * *Generación:* La IA propuso correctamente la interfaz `Protocol` para cumplir con OCP (Principio Abierto/Cerrado), permitiendo inyectar `DatabaseAlertStrategy` sin alterar la lógica central.
+  * *Adaptación:* Se debió intervenir el código sugerido para corregir un `TypeError` en el Router, ya que la IA había desfasado la cantidad de parámetros posicionales al ignorar un campo opcional. También fue necesario purgar la base de datos local (SQLite) para forzar a SQLAlchemy a crear la nueva tabla `alerts`.
+* **Resultado:** Feature implementada con 100% de éxito. El sistema ahora evalúa lecturas contra umbrales dinámicos y persiste las anomalías en la base de datos.
+
 

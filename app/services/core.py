@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.models import ReadingModel, SensorModel
+from app.models import AlertModel, ReadingModel, SensorModel
 from app.repositories.base import SensorHubRepository
 from app.services.alerts import AlertStrategy, ConsoleAlertStrategy
 
@@ -18,10 +18,12 @@ class SensorHubService:
         self._alert_strategy = alert_strategy
 
     # --- SENSORES ---
-    def create_sensor(self, sensor_id: str, type: str, name: str) -> SensorModel:
+    def create_sensor(
+        self, sensor_id: str, type: str, name: str, threshold: float | None = None
+    ) -> SensorModel:
         if self._repo.get_sensor(sensor_id):
             raise ValueError(f"El sensor con ID '{sensor_id}' ya existe.")
-        return self._repo.add_sensor(sensor_id, type, name)
+        return self._repo.add_sensor(sensor_id, type, name, threshold)
 
     def get_sensor(self, sensor_id: str) -> SensorModel | None:
         return self._repo.get_sensor(sensor_id)
@@ -38,9 +40,8 @@ class SensorHubService:
         sensor = self._repo.get_sensor(sensor_id)
         if not sensor:
             raise ValueError(f"El sensor '{sensor_id}' no existe. Créalo primero.")
-        
+
         # 2. Detección de Anomalías (Feature Semana 5)
-        # Verificamos si el sensor tiene un umbral configurado y si la lectura lo supera
         if sensor.threshold is not None and value > sensor.threshold:
             self._alert_strategy.send_alert(sensor_id, value, sensor.threshold)
 
@@ -67,3 +68,9 @@ class SensorHubService:
 
     def delete_reading(self, reading_id: int) -> bool:
         return self._repo.delete_reading(reading_id)
+
+    # --- ALERTAS ---
+    def get_sensor_alerts(self, sensor_id: str) -> list[AlertModel]:
+        if not self._repo.get_sensor(sensor_id):
+            raise ValueError(f"El sensor '{sensor_id}' no existe.")
+        return self._repo.list_alerts(sensor_id)

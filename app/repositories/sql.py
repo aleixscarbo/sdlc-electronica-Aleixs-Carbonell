@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import ReadingModel, SensorModel
+from app.models import AlertModel, ReadingModel, SensorModel
 from app.repositories.base import SensorHubRepository
 
 
@@ -12,8 +12,10 @@ class SQLSensorHubRepository(SensorHubRepository):
         self.session = session
 
     # --- SENSORES ---
-    def add_sensor(self, sensor_id: str, type: str, name: str) -> SensorModel:
-        sensor = SensorModel(id=sensor_id, type=type, name=name)
+    def add_sensor(
+        self, sensor_id: str, type: str, name: str, threshold: float | None = None
+    ) -> SensorModel:
+        sensor = SensorModel(id=sensor_id, type=type, name=name, threshold=threshold)
         self.session.add(sensor)
         self.session.commit()
         self.session.refresh(sensor)
@@ -68,7 +70,8 @@ class SQLSensorHubRepository(SensorHubRepository):
                 setattr(reading, key, val)
             self.session.commit()
             self.session.refresh(reading)
-        return reading
+            return reading
+        return None
 
     def delete_reading(self, reading_id: int) -> bool:
         reading = self.get_reading(reading_id)
@@ -77,3 +80,19 @@ class SQLSensorHubRepository(SensorHubRepository):
             self.session.commit()
             return True
         return False
+
+    # --- ALERTAS ---
+    def add_alert(self, sensor_id: str, value: float, threshold: float) -> AlertModel:
+        alert = AlertModel(sensor_id=sensor_id, value=value, threshold=threshold)
+        self.session.add(alert)
+        self.session.commit()
+        self.session.refresh(alert)
+        return alert
+
+    def list_alerts(self, sensor_id: str) -> list[AlertModel]:
+        stmt = (
+            select(AlertModel)
+            .where(AlertModel.sensor_id == sensor_id)
+            .order_by(AlertModel.timestamp.desc())
+        )
+        return list(self.session.scalars(stmt).all())

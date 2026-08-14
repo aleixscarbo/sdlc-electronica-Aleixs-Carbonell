@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.dependencies import get_sensor_hub_service
-from app.schemas import ReadingCreate, ReadingOut, SensorCreate, SensorOut
+from app.schemas import AlertOut, ReadingCreate, ReadingOut, SensorCreate, SensorOut
 from app.services.core import SensorHubService
 
 router = APIRouter(prefix="/sensors", tags=["Sensors"])
@@ -17,7 +17,9 @@ def create_sensor(
     service: Annotated[SensorHubService, Depends(get_sensor_hub_service)],
 ) -> SensorOut:
     try:
-        return service.create_sensor(payload.id, payload.type, payload.name)  # type: ignore
+        return service.create_sensor(
+            payload.id, payload.type, payload.name, payload.threshold
+        )  # type: ignore
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e)) from e  # 409 Conflict
 
@@ -57,5 +59,17 @@ def list_sensor_readings(
 ) -> list[ReadingOut]:  # type: ignore
     try:
         return service.get_sensor_readings(sensor_id, limit, offset, from_date, to_date)  # type: ignore
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+# --- RUTAS DE ALERTAS ---
+@router.get("/{sensor_id}/alerts", response_model=list[AlertOut])
+def get_sensor_alerts(
+    sensor_id: str,
+    service: Annotated[SensorHubService, Depends(get_sensor_hub_service)],
+) -> list[AlertOut]:  # type: ignore
+    try:
+        return service.get_sensor_alerts(sensor_id)  # type: ignore
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e

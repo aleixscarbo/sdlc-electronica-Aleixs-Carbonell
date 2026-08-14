@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 class SensorBase(BaseModel):
     type: str = Field(..., description="Tipo de sensor (ej. temperature, humidity)")
     name: str = Field(..., description="Nombre del sensor")
+    threshold: float | None = Field(default=None, description="Umbral para alerta de anomalías")
 
 
 class SensorCreate(SensorBase):
@@ -19,7 +20,6 @@ class SensorOut(SensorBase):
 
 
 # --- ESQUEMAS PARA LECTURAS ---
-
 
 # EXTRAEMOS LAS REGLAS FÍSICAS A LA CLASE BASE
 class ReadingBase(BaseModel):
@@ -67,10 +67,18 @@ class ReadingUpdate(ReadingBase):
 
 
 class ReadingOut(ReadingBase):
-    # En salida, forzamos que existan
-    value: float
-    unit: str
     id: int
     sensor_id: str
     created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- ESQUEMAS PARA ALERTAS ---
+class AlertOut(BaseModel):
+    id: int
+    sensor_id: str
+    value: float
+    threshold: float
+    timestamp: datetime
+
     model_config = ConfigDict(from_attributes=True)
