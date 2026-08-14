@@ -439,3 +439,16 @@ La IA generó los bloques YAML para integrar la acción oficial de Trivy (`aquas
 * **Análisis Forense (Mocking de Base de Datos):** * Se diseñó el archivo `tests/test_db_and_repo.py` aislando por completo la base de datos real.
   * Se empleó `unittest.mock.MagicMock` y `patch` para simular las variables de entorno de Render (`DATABASE_URL`), el generador de sesiones (`SessionLocal`) y los retornos vacíos (`None`) de SQLAlchemy.
 * **Veredicto y Criterio Técnico:** Se superó la barrera del 95% de cobertura global (95.06%), probando satisfactoriamente caminos de error en la BD sin necesidad de levantar un motor real. Se comprobó que tener redundancia de LLMs (Copilot + Gemini) es crítico para mantener la continuidad operativa en el desarrollo asistido por IA.
+
+---
+
+## [ENTRADA 25] Semana 5 - Día 4: Documentación Arquitectónica (ADR) y Evaluación Monolito vs Microservicios
+
+* **Fecha:** 14 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Redactar el primer Architecture Decision Record (ADR 0001) para formalizar la elección de la Arquitectura en Capas en SensorHub y sintetizar las lecturas de Martin Fowler (*Microservices* y *MonolithFirst*).
+
+### Análisis Forense de la Interacción y Criterio Técnico:
+* **Generación del ADR:** Se estructuró el documento bajo el estándar Nygard (Estado, Contexto, Decisión, Consecuencias). Se enfatizó que la capa de servicio se abstrae mediante `Protocol` (DIP), lo que posibilitó la suite de 18 pruebas automatizadas con 95.06% de cobertura alcanzada en sesiones previas.
+* **Evaluación Arquitectónica (Fowler):** Se fundamentó por qué SensorHub debe ser un *Monolito Modular* y no una red de microservicios. Crear microservicios prematuros para un sistema de telemetría IoT inicial introduciría la "prima de complejidad de microservicios" (latencia de red, consistencia eventual, fallos distribuidos) sin obtener beneficios de escala organizacional.
+* **Decisión de Ingeniería:** Se aprueba el ADR 0001 en el repositorio como documento vivo de diseño. La arquitectura actual se defenderá como monolito modular desacoplado en la evaluación síncrona.
+
