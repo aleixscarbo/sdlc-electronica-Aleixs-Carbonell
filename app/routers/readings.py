@@ -38,6 +38,6 @@ def delete_reading(
     reading_id: int,
     service: Annotated[SensorHubService, Depends(get_sensor_hub_service)],
 ) -> None:
-    success = service.remove_reading(reading_id)
+    success = service.delete_reading(reading_id)
     if not success:
         raise HTTPException(status_code=404, detail="Lectura no encontrada")

@@ -12,11 +12,11 @@ class SensorHubService:
     def __init__(
         self,
         repo: SensorHubRepository,
-        alert_strategy: AlertStrategy = ConsoleAlertStrategy(),
+        alert_strategy: AlertStrategy | None = None,
     ) -> None:
         self._repo = repo
-        self._alert_strategy = alert_strategy
-
+        self._alert_strategy = alert_strategy or ConsoleAlertStrategy()
+        
     # --- SENSORES ---
     def create_sensor(
         self, sensor_id: str, type: str, name: str, threshold: float | None = None

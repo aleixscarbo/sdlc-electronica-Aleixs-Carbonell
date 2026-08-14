@@ -107,6 +107,7 @@ class TestRecordReadingInfiniteValue:
         mock_repo: MagicMock = MagicMock(spec=SensorHubRepository)
         existing_sensor: SensorModel = MagicMock(spec=SensorModel)
         existing_sensor.id = "SENSOR-001"
+        existing_sensor.threshold = None
         mock_repo.get_sensor.return_value = existing_sensor
         
         # Simular que add_reading retorna una lectura
@@ -137,6 +138,7 @@ class TestRecordReadingInfiniteValue:
         mock_repo: MagicMock = MagicMock(spec=SensorHubRepository)
         existing_sensor: SensorModel = MagicMock(spec=SensorModel)
         existing_sensor.id = "SENSOR-001"
+        existing_sensor.threshold = None
         mock_repo.get_sensor.return_value = existing_sensor
         
         # Simular que add_reading retorna una lectura
