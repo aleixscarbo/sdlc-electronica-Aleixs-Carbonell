@@ -2,13 +2,20 @@ from datetime import datetime
 
 from app.models import ReadingModel, SensorModel
 from app.repositories.base import SensorHubRepository
+from app.services.alerts import AlertStrategy, ConsoleAlertStrategy
 
 
 class SensorHubService:
-    """Lógica de negocio central. Audita la integridad relacional."""
+    """Lógica de negocio central. Audita la integridad relacional y anomalías."""
 
-    def __init__(self, repo: SensorHubRepository) -> None:
+    # Inyección de dependencias (OCP: La estrategia por defecto es ConsoleAlertStrategy)
+    def __init__(
+        self,
+        repo: SensorHubRepository,
+        alert_strategy: AlertStrategy = ConsoleAlertStrategy(),
+    ) -> None:
         self._repo = repo
+        self._alert_strategy = alert_strategy
 
     # --- SENSORES ---
     def create_sensor(self, sensor_id: str, type: str, name: str) -> SensorModel:
@@ -25,12 +32,19 @@ class SensorHubService:
     def remove_sensor(self, sensor_id: str) -> bool:
         return self._repo.delete_sensor(sensor_id)
 
-    # --- LECTURAS ---
+    # --- LECTURAS Y ANOMALÍAS ---
     def record_reading(self, sensor_id: str, value: float, unit: str) -> ReadingModel:
-        # Validación de integridad relacional: ¿Existe el sensor?
-        if not self._repo.get_sensor(sensor_id):
+        # 1. Validación de integridad relacional
+        sensor = self._repo.get_sensor(sensor_id)
+        if not sensor:
             raise ValueError(f"El sensor '{sensor_id}' no existe. Créalo primero.")
-        # (Nota: La validación termodinámica ya la hizo Pydantic en los Schemas)
+        
+        # 2. Detección de Anomalías (Feature Semana 5)
+        # Verificamos si el sensor tiene un umbral configurado y si la lectura lo supera
+        if sensor.threshold is not None and value > sensor.threshold:
+            self._alert_strategy.send_alert(sensor_id, value, sensor.threshold)
+
+        # 3. Persistencia
         return self._repo.add_reading(sensor_id, value, unit)
 
     def get_sensor_readings(
@@ -51,5 +65,5 @@ class SensorHubService:
     def update_reading(self, reading_id: int, data: dict) -> ReadingModel | None:
         return self._repo.update_reading(reading_id, data)
 
-    def remove_reading(self, reading_id: int) -> bool:
+    def delete_reading(self, reading_id: int) -> bool:
         return self._repo.delete_reading(reading_id)
