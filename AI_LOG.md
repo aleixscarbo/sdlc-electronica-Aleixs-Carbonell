@@ -467,4 +467,24 @@ La IA generó los bloques YAML para integrar la acción oficial de Trivy (`aquas
   * *Adaptación:* Se debió intervenir el código sugerido para corregir un `TypeError` en el Router, ya que la IA había desfasado la cantidad de parámetros posicionales al ignorar un campo opcional. También fue necesario purgar la base de datos local (SQLite) para forzar a SQLAlchemy a crear la nueva tabla `alerts`.
 * **Resultado:** Feature implementada con 100% de éxito. El sistema ahora evalúa lecturas contra umbrales dinámicos y persiste las anomalías en la base de datos.
 
+---
 
+## Entrada 29: Resolución de Conflictos de Migración en Producción (SQLAlchemy vs Alembic)
+**Fecha:** 14 de Agosto de 2026
+**Fase:** Día 5 - Ejercicio Integrador (Despliegue y Persistencia)
+
+**Contexto:** Tras implementar el modelo de `Alerts` y agregar la columna `threshold` a `Sensors`, el despliegue en Render colapsó con un Error 500. Los logs arrojaban `psycopg.errors.DuplicateTable` y posteriormente `UndefinedColumn: column sensors.threshold does not exist`.
+
+**Prompts utilizados:**
+- "El CI de mi pipeline pasó con todos los tests en check, pero el deploy en Render falló, estos son los logs: psycopg.errors.DuplicateTable: relation 'alerts' already exists"
+- "Ahora mi swagger no funciona, los logs arrojan: UndefinedColumn: column sensors.threshold does not exist"
+
+**¿Qué generó la IA?**
+La IA diagnosticó una condición de carrera (race condition) clásica en producción: `Base.metadata.create_all()` de SQLAlchemy se ejecutó antes que Alembic. SQLAlchemy creó la tabla `alerts` nueva, pero ignoró la tabla `sensors` porque ya existía, omitiendo la creación de la nueva columna `threshold`.
+La IA sugirió dos acciones:
+1. Eliminar `create_all()` del código.
+2. Ejecutar un script remoto con SQL crudo (vía `psycopg`) para hacer un `DROP TABLE CASCADE` incluyendo la tabla `alembic_version` en Render, saltando la caché de la plataforma.
+
+**¿Qué cambié y por qué (Criterio Técnico)?**
+- **Cambiado:** Comenté definitivamente la línea `# Base.metadata.create_all(bind=engine)` en `app/main.py`.
+- **Por qué:** En una arquitectura madura que utiliza bases de datos relacionales en la nube, la herramienta de migraciones (Alembic) debe tener el monopolio absoluto sobre el esquema de la base de datos (Schema Control). Permitir que SQLAlchemy intente crear tablas dinámicamente destruye la trazabilidad de las migraciones y causa inconsistencias estructurales como la falta de la columna `threshold`. Con esto, la API quedó estable, devolviendo `201 Created` al disparar anomalías reales en producción.
