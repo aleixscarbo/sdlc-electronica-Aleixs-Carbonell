@@ -488,3 +488,23 @@ La IA sugirió dos acciones:
 **¿Qué cambié y por qué (Criterio Técnico)?**
 - **Cambiado:** Comenté definitivamente la línea `# Base.metadata.create_all(bind=engine)` en `app/main.py`.
 - **Por qué:** En una arquitectura madura que utiliza bases de datos relacionales en la nube, la herramienta de migraciones (Alembic) debe tener el monopolio absoluto sobre el esquema de la base de datos (Schema Control). Permitir que SQLAlchemy intente crear tablas dinámicamente destruye la trazabilidad de las migraciones y causa inconsistencias estructurales como la falta de la columna `threshold`. Con esto, la API quedó estable, devolviendo `201 Created` al disparar anomalías reales en producción.
+
+---
+
+## Entrada 30: Experimento Comparativo de Code Review (Humano vs. IA)
+**Fecha:** 15 de Agosto de 2026
+**Fase:** Día 6 - Peer Review Ronda 2 y Cierre de Semana
+
+**Contexto:** Realización de una auditoría comparativa de código sobre el PR de un compañero utilizando el instrumento `Checklist_10_puntos_Peer_Review_Semana3.pdf`. Se contrastó el análisis local ejecutable (consola/pytest) contra un review automatizado por IA usando un prompt estructurado de Staff SWE.
+
+**Prompt utilizado:**
+> "Actúa como un Staff Software Engineer estricto pero constructivo. Realiza un Code Review de los archivos adjuntos utilizando ÚNICAMENTE los criterios del Checklist_10_puntos_Peer_Review_Semana3.pdf. Ignora el estilo o formateo menor; enfócate en diseño, inyección de dependencias, fugas de lógica de negocio en los routers, validaciones de Pydantic, manejo de sesiones de SQLAlchemy y calidad de las pruebas. Genera al menos dos observaciones críticas usando el formato exacto `archivo:línea - qué observaste - qué propones`, y sugiere una pregunta de diseño profunda para el autor."
+
+**¿Qué produjo la IA vs. Qué detectó el Humano?**
+- **Hallazgo exclusivo del Humano:** Al clonar el repositorio y ejecutar `pytest -v` en la consola local, el humano identificó un *warning* de degradación en la suite de pruebas (`StarletteDeprecationWarning: Using httpx with starlette.testclient is deprecated`). La IA, al evaluar únicamente la estructura sintáctica de los archivos estáticos, fue incapaz de anticipar este comportamiento en tiempo de ejecución.
+- **Hallazgo exclusivo de la IA:** La IA detectó de inmediato un antipatrón de diseño sutil en `app/services/sensor_service.py:28` (uso de `hasattr`/`getattr` con reflexión dinámica para adivinar nombres de métodos del repositorio). El humano lo había interpretado como una "defensa contra errores", pero la IA demostró que rompe el tipado de `mypy` y viola la Inversión de Dependencias (DIP).
+
+**Conclusiones Clave sobre la IA en Code Reviews:**
+1. **La IA es un amplificador de análisis estático, no un ejecutor:** La IA destaca identificando antipatrones de diseño, acoplamiento y faltas de abstracción en archivos grandes. Sin embargo, no sustituye la ejecución real del código en una terminal local ni la inspección de *warnings* en tiempo de ejecución.
+2. **El contexto de producción requiere criterio de ingeniería:** La IA puede marcar la captura de excepciones genéricas, pero corresponde al ingeniero juzgar el impacto real que esto causa en producción (como las fallas de despliegue entre `create_all()` y Alembic).
+3. **Objetividad y sesgo:** El uso de prompts estructurados junto con una checklist objetiva elimina los sesgos personales durante la revisión entre pares, enfocando la discusión puramente en calidad de software, principios SOLID y mantenibilidad.
