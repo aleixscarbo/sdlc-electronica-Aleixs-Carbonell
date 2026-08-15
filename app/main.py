@@ -1,14 +1,12 @@
 from fastapi import FastAPI
 
-from app.db import Base, engine
-
 # Importamos modelos explícitamente para evitar 
 # solapamiento y que SQLAlchemy los registre
 from app.models import AlertModel, ReadingModel, SensorModel  # noqa: F401
 from app.routers import readings, sensors
 
 # Crear todas las tablas en la base de datos al arrancar la aplicación  
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 # 1. Inicializar la app
 app = FastAPI(title="SensorHub API", version="1.0.0")

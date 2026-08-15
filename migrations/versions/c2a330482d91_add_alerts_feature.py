@@ -1,8 +1,8 @@
 """add_alerts_feature
 
-Revision ID: 930f450f1f21
+Revision ID: c2a330482d91
 Revises: 3d6c89753679
-Create Date: 2026-08-14 17:14:17.564027
+Create Date: 2026-08-14 22:28:26.283971
 
 """
 from collections.abc import Sequence
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = '930f450f1f21'
+revision: str = 'c2a330482d91'
 down_revision: str | Sequence[str] | None = '3d6c89753679'
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
