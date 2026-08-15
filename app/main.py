@@ -7,7 +7,7 @@ from app.db import Base, engine
 from app.models import AlertModel, ReadingModel, SensorModel  # noqa: F401
 from app.routers import readings, sensors
 
-# Crear todas las tablas en la base de datos al arrancar la aplicación
+# Crear todas las tablas en la base de datos al arrancar la aplicación  
 Base.metadata.create_all(bind=engine)
 
 # 1. Inicializar la app
