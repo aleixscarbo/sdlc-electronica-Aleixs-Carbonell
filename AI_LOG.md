@@ -508,3 +508,23 @@ La IA sugirió dos acciones:
 1. **La IA es un amplificador de análisis estático, no un ejecutor:** La IA destaca identificando antipatrones de diseño, acoplamiento y faltas de abstracción en archivos grandes. Sin embargo, no sustituye la ejecución real del código en una terminal local ni la inspección de *warnings* en tiempo de ejecución.
 2. **El contexto de producción requiere criterio de ingeniería:** La IA puede marcar la captura de excepciones genéricas, pero corresponde al ingeniero juzgar el impacto real que esto causa en producción (como las fallas de despliegue entre `create_all()` y Alembic).
 3. **Objetividad y sesgo:** El uso de prompts estructurados junto con una checklist objetiva elimina los sesgos personales durante la revisión entre pares, enfocando la discusión puramente en calidad de software, principios SOLID y mantenibilidad.
+
+---
+
+## Entrada 31: Segunda Ronda de Peer Review y Detección de Antipatrores de Pruebas (Test-Induced Design Damage)
+**Fecha:** 15 de Agosto de 2026
+**Fase:** Día 6 - Peer Review Ronda 2 (Evaluación de Par)
+
+**Contexto:** Realización del segundo ejercicio de Peer Review sobre el repositorio de un compañero, aplicando la lista de cotejo de 10 puntos (`Checklist_10_puntos_Peer_Review_Semana3.pdf`) para contrastar hallazgos de ejecución en terminal local contra análisis estático realizado por IA.
+
+**Prompt utilizado:**
+> "Actúa como un Staff Software Engineer estricto pero constructivo. Realiza un Code Review de los archivos adjuntos utilizando ÚNICAMENTE los criterios del Checklist_10_puntos_Peer_Review_Semana3.pdf. Ignora el estilo o formateo menor; enfócate en diseño, inyección de dependencias, fugas de lógica de negocio en los routers, validaciones de Pydantic, manejo de sesiones de SQLAlchemy y calidad de las pruebas. Genera al menos dos observaciones críticas usando el formato exacto `archivo:línea - qué observaste - qué propones`, y sugiere una pregunta de diseño profunda para el autor."
+
+**¿Qué produjo la IA vs. Qué detectó el Humano?**
+- **Hallazgo exclusivo del Humano:** Al ejecutar `pytest -v` en la terminal local, el humano verificó la presencia del *warning* `StarletteDeprecationWarning` derivado de la desactualización de `TestClient` con `httpx`. Además, la ejecución confirmó que 16/16 pruebas pasaron exitosamente a pesar de las inconsistencias internas de diseño.
+- **Hallazgo exclusivo de la IA:** La IA detectó una falla sutil de arquitectura conocida como *Test-Induced Design Damage* en `app/services/reading_service.py:27`, donde el autor degradó la seguridad de tipos del código de producción con `getattr()` para evitar que sus objetos de prueba (*fakes*) arrojaran un `AttributeError`.
+
+**Conclusiones Clave sobre la IA en Code Reviews:**
+1. **Detección de contaminación entre entorno de test y producción:** La IA es sumamente eficiente identificando cuando el código de producción se ensucia o debilita para complacer a las pruebas unitarias.
+2. **Complementariedad necesaria:** El review humano (ejecutando comandos reales en la consola) y el review de IA (analizando patrones estáticos) forman una combinación indispensable. Uno prueba el comportamiento real y el otro audita la mantenibilidad futura.
+3. **Criterio de aprobación:** Un proyecto puede tener 100% de tests en verde y aun así requerir correcciones de diseño estructural antes de ser fusionado a la rama principal.
