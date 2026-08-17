@@ -73,5 +73,5 @@ class AlertOut(BaseModel):
     sensor_id: str
     value: float
     threshold: float
-    created_at: datetime
+    created_at: datetime | None = None
     model_config = ConfigDict(from_attributes=True)
