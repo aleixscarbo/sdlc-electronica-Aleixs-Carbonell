@@ -77,13 +77,8 @@ async def test_full_integration_workflow(client: AsyncClient) -> None:
 async def test_error_handlers(client: AsyncClient) -> None:
     """Verifica que el sistema rechace peticiones a objetos que no existen"""
     assert (
-        (
-            await client.post(
-                "/sensors/FAKE/readings", json={"value": 10, "unit": "C"}
-            )
-        ).status_code
-        == 404
-    )
+        await client.post("/sensors/FAKE/readings", json={"value": 10, "unit": "C"})
+    ).status_code == 404
     assert (await client.get("/sensors/FAKE/readings")).status_code == 404
 
     assert (await client.get("/readings/99999")).status_code == 404

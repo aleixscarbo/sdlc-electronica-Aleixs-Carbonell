@@ -8,7 +8,7 @@ class SensorBase(BaseModel):
     type: str = Field(..., description="Tipo de sensor (ej. temperature, humidity)")
     name: str = Field(..., description="Nombre del sensor")
     threshold: float | None = Field(
-        default=None, description="Umbral para alerta de anomalías"
+        default=None, description="Umbral para alerta de anomalías", allow_inf_nan=False
     )
 
 
@@ -22,23 +22,16 @@ class SensorOut(SensorBase):
 
 
 # --- ESQUEMAS PARA LECTURAS ---
-
-
-# EXTRAEMOS LAS REGLAS FÍSICAS A LA CLASE BASE
 class ReadingBase(BaseModel):
-    value: float | None = None
+    value: float | None = Field(default=None, allow_inf_nan=False)
     unit: str | None = None
 
     @model_validator(mode="after")
     def check_physics(self) -> "ReadingBase":
-        # Si alguno falta, no podemos validar la combinación, lo dejamos pasar
-        # (Esto es útil para PATCH donde pueden enviar solo el 'value' sin 'unit')
         if self.unit is None or self.value is None:
             return self
 
         unit_upper = self.unit.upper()
-
-        # Filtros físicos
         if unit_upper in ["C", "F", "K"]:
             if unit_upper == "C" and self.value < -273.15:
                 raise ValueError("Física inválida: Temperatura C bajo el cero absoluto")
@@ -54,18 +47,16 @@ class ReadingBase(BaseModel):
         else:
             raise ValueError(f"Física inválida: Unidad desconocida '{self.unit}'")
 
-        self.unit = unit_upper  # Normaliza a mayúscula
+        self.unit = unit_upper
         return self
 
 
 class ReadingCreate(ReadingBase):
-    # En creación, forzamos que vengan los dos campos obligatoriamente
-    value: float
+    value: float = Field(..., allow_inf_nan=False)
     unit: str
 
 
 class ReadingUpdate(ReadingBase):
-    # En actualización, ambos siguen siendo opcionales (ya heredan de la base)
     pass
 
 
@@ -82,6 +73,5 @@ class AlertOut(BaseModel):
     sensor_id: str
     value: float
     threshold: float
-    timestamp: datetime
-
+    created_at: datetime
     model_config = ConfigDict(from_attributes=True)

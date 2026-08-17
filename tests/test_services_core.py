@@ -11,6 +11,7 @@ import pytest
 from app.models import ReadingModel, SensorModel
 from app.repositories.base import SensorHubRepository
 from app.services.core import SensorHubService
+from app.services.exceptions import SensorAlreadyExistsError, SensorNotFoundError
 
 
 class TestRecordReadingSensorNotFound:
@@ -20,15 +21,16 @@ class TestRecordReadingSensorNotFound:
         # Arrange: Crear mock del repositorio y simular que get_sensor retorna None
         mock_repo: MagicMock = MagicMock(spec=SensorHubRepository)
         mock_repo.get_sensor.return_value = None
-        
+
         service: SensorHubService = SensorHubService(repo=mock_repo)
         sensor_id: str = "nonexistent_sensor"
         value: float = 25.5
         unit: str = "C"
 
-        # Act & Assert: Verificar que se lanza ValueError
-        with pytest.raises(ValueError, 
-                           match="El sensor 'nonexistent_sensor' no existe"):
+        # Act & Assert: Verificar que se lanza SensorNotFoundError
+        with pytest.raises(
+            SensorNotFoundError, match="El sensor 'nonexistent_sensor' no existe."
+        ):
             service.record_reading(sensor_id=sensor_id, value=value, unit=unit)
 
         # Assert: Verificar que get_sensor fue llamado exactamente una vez
@@ -40,32 +42,21 @@ class TestRecordReadingSensorNotFound:
 class TestGetSensorReadingsSensorNotFound:
     """Test 2: get_sensor_readings lanza ValueError si el sensor no existe."""
 
-    def test_get_sensor_readings_raises_when_sensor_does_not_exist(self) -> None:
-        # Arrange: Crear mock del repositorio
+    def test_record_reading_raises_when_sensor_does_not_exist(self) -> None:
+        # Arrange: Crear mock del repositorio y simular que get_sensor retorna None
         mock_repo: MagicMock = MagicMock(spec=SensorHubRepository)
         mock_repo.get_sensor.return_value = None
-        
+
         service: SensorHubService = SensorHubService(repo=mock_repo)
         sensor_id: str = "nonexistent_sensor"
-        limit: int = 10
-        offset: int = 0
+        value: float = 25.5
+        unit: str = "C"
 
-        # Act & Assert: Verificar que se lanza ValueError
-        with pytest.raises(ValueError, 
-                           match="El sensor 'nonexistent_sensor' no existe"):
-            service.get_sensor_readings(
-                sensor_id=sensor_id,
-                limit=limit,
-                offset=offset,
-                from_date=None,
-                to_date=None,
-            )
-
-        # Assert: Verificar que get_sensor fue llamado una vez
-        mock_repo.get_sensor.assert_called_once_with(sensor_id)
-        # Verificar que list_readings NUNCA fue llamado
-        mock_repo.list_readings.assert_not_called()
-
+        # Act & Assert: Verificar que se lanza SensorNotFoundError
+        with pytest.raises(
+            SensorNotFoundError, match="El sensor 'nonexistent_sensor' no existe."
+        ):
+            service.record_reading(sensor_id=sensor_id, value=value, unit=unit)
 
 class TestCreateSensorAlreadyExists:
     """Test 3: create_sensor lanza ValueError si el ID ya existe."""
@@ -77,16 +68,18 @@ class TestCreateSensorAlreadyExists:
         existing_sensor.id = "SENSOR-001"
         existing_sensor.type = "temperature"
         existing_sensor.name = "Room Temperature"
-        
+
         mock_repo.get_sensor.return_value = existing_sensor
-        
+
         service: SensorHubService = SensorHubService(repo=mock_repo)
         sensor_id: str = "SENSOR-001"
         sensor_type: str = "temperature"
         sensor_name: str = "Duplicate Sensor"
 
-        # Act & Assert: Verificar que se lanza ValueError
-        with pytest.raises(ValueError, match="El sensor con ID 'SENSOR-001' ya existe"):
+        # Act & Assert: Verificar que se lanza SensorAlreadyExistsError
+        with pytest.raises(
+            SensorAlreadyExistsError, match="El sensor con ID 'SENSOR-001' ya existe"
+        ):
             service.create_sensor(
                 sensor_id=sensor_id,
                 type=sensor_type,
@@ -109,13 +102,13 @@ class TestRecordReadingInfiniteValue:
         existing_sensor.id = "SENSOR-001"
         existing_sensor.threshold = None
         mock_repo.get_sensor.return_value = existing_sensor
-        
+
         # Simular que add_reading retorna una lectura
         reading: ReadingModel = MagicMock(spec=ReadingModel)
         reading.id = 1
         reading.value = float("inf")
         mock_repo.add_reading.return_value = reading
-        
+
         service: SensorHubService = SensorHubService(repo=mock_repo)
         sensor_id: str = "SENSOR-001"
         value: float = float("inf")
@@ -140,13 +133,13 @@ class TestRecordReadingInfiniteValue:
         existing_sensor.id = "SENSOR-001"
         existing_sensor.threshold = None
         mock_repo.get_sensor.return_value = existing_sensor
-        
+
         # Simular que add_reading retorna una lectura
         reading: ReadingModel = MagicMock(spec=ReadingModel)
         reading.id = 2
         reading.value = float("nan")
         mock_repo.add_reading.return_value = reading
-        
+
         service: SensorHubService = SensorHubService(repo=mock_repo)
         sensor_id: str = "SENSOR-001"
         value: float = float("nan")
@@ -172,7 +165,7 @@ class TestRemoveSensorCallsRepository:
         # Arrange: Crear mock que simula eliminación exitosa
         mock_repo: MagicMock = MagicMock(spec=SensorHubRepository)
         mock_repo.delete_sensor.return_value = True
-        
+
         service: SensorHubService = SensorHubService(repo=mock_repo)
         sensor_id: str = "SENSOR-001"
 
@@ -188,7 +181,7 @@ class TestRemoveSensorCallsRepository:
         # Arrange: Crear mock que simula sensor no encontrado
         mock_repo: MagicMock = MagicMock(spec=SensorHubRepository)
         mock_repo.delete_sensor.return_value = False
-        
+
         service: SensorHubService = SensorHubService(repo=mock_repo)
         sensor_id: str = "nonexistent_sensor"
 

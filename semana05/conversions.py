@@ -11,4 +11,6 @@ def celsius_to_fahrenheit(c: float) -> float:
         >>> celsius_to_fahrenheit(0)
         32.0
     """
+    if c < -273.15:
+        raise ValueError("Temperatura por debajo del cero absoluto (-273.15 C)")
     return round((c * 9 / 5) + 32, 2)

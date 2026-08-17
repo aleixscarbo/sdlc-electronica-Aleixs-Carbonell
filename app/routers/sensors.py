@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 
 from app.dependencies import get_sensor_hub_service
 from app.schemas import AlertOut, ReadingCreate, ReadingOut, SensorCreate, SensorOut
@@ -10,66 +10,54 @@ from app.services.core import SensorHubService
 router = APIRouter(prefix="/sensors", tags=["Sensors"])
 
 
-# --- RUTAS DE SENSORES ---
 @router.post("/", response_model=SensorOut, status_code=201)
 def create_sensor(
     payload: SensorCreate,
     service: Annotated[SensorHubService, Depends(get_sensor_hub_service)],
 ) -> SensorOut:
-    try:
-        return service.create_sensor(
-            payload.id, payload.type, payload.name, payload.threshold
-        )  # type: ignore
-    except ValueError as e:
-        raise HTTPException(status_code=409, detail=str(e)) from e  # 409 Conflict
+    sensor = service.create_sensor(
+        payload.id, payload.type, payload.name, payload.threshold
+    )
+    return SensorOut.model_validate(sensor)
 
 
 @router.get("/", response_model=list[SensorOut])
 def list_sensors(
     service: Annotated[SensorHubService, Depends(get_sensor_hub_service)],
-    limit: int = 50,
-    offset: int = 0,
-) -> list[SensorOut]:  # type: ignore
-    return service.get_all_sensors(limit, offset)  # type: ignore
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+) -> list[SensorOut]:
+    sensors = service.get_all_sensors(limit, offset)
+    return [SensorOut.model_validate(s) for s in sensors]
 
 
-# --- RUTAS DE LECTURAS (Dependientes de un sensor) ---
 @router.post("/{sensor_id}/readings", response_model=ReadingOut, status_code=201)
-def record_reading(
+def create_sensor_reading(
     sensor_id: str,
     payload: ReadingCreate,
     service: Annotated[SensorHubService, Depends(get_sensor_hub_service)],
 ) -> ReadingOut:
-    try:
-        return service.record_reading(sensor_id, payload.value, payload.unit)  # type: ignore
-    except ValueError as e:
-        # Pydantic lanza ValidationError antes de llegar aquí,
-        # pero capturamos errores de lógica (ej. sensor no existe)
-        raise HTTPException(status_code=404, detail=str(e)) from e
+    reading = service.record_reading(sensor_id, payload.value, payload.unit)
+    return ReadingOut.model_validate(reading)
 
 
 @router.get("/{sensor_id}/readings", response_model=list[ReadingOut])
 def list_sensor_readings(
     sensor_id: str,
     service: Annotated[SensorHubService, Depends(get_sensor_hub_service)],
-    limit: int = 50,
-    offset: int = 0,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     from_date: Annotated[datetime | None, Query(alias="from")] = None,
     to_date: Annotated[datetime | None, Query(alias="to")] = None,
-) -> list[ReadingOut]:  # type: ignore
-    try:
-        return service.get_sensor_readings(sensor_id, limit, offset, from_date, to_date)  # type: ignore
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
+) -> list[ReadingOut]:
+    readings = service.get_sensor_readings(sensor_id, limit, offset, from_date, to_date)
+    return [ReadingOut.model_validate(r) for r in readings]
 
 
-# --- RUTAS DE ALERTAS ---
 @router.get("/{sensor_id}/alerts", response_model=list[AlertOut])
 def get_sensor_alerts(
     sensor_id: str,
     service: Annotated[SensorHubService, Depends(get_sensor_hub_service)],
-) -> list[AlertOut]:  # type: ignore
-    try:
-        return service.get_sensor_alerts(sensor_id)  # type: ignore
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
+) -> list[AlertOut]:
+    alerts = service._repo.list_alerts(sensor_id)
+    return [AlertOut.model_validate(a) for a in alerts]

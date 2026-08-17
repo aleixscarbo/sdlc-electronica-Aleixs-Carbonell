@@ -512,7 +512,7 @@ La IA sugirió dos acciones:
 ---
 
 ## Entrada 31: Segunda Ronda de Peer Review y Detección de Antipatrores de Pruebas (Test-Induced Design Damage)
-**Fecha:** 15 de Agosto de 2026
+**Fecha:** 16 de Agosto de 2026
 **Fase:** Día 6 - Peer Review Ronda 2 (Evaluación de Par)
 
 **Contexto:** Realización del segundo ejercicio de Peer Review sobre el repositorio de un compañero, aplicando la lista de cotejo de 10 puntos (`Checklist_10_puntos_Peer_Review_Semana3.pdf`) para contrastar hallazgos de ejecución en terminal local contra análisis estático realizado por IA.
@@ -528,3 +528,26 @@ La IA sugirió dos acciones:
 1. **Detección de contaminación entre entorno de test y producción:** La IA es sumamente eficiente identificando cuando el código de producción se ensucia o debilita para complacer a las pruebas unitarias.
 2. **Complementariedad necesaria:** El review humano (ejecutando comandos reales en la consola) y el review de IA (analizando patrones estáticos) forman una combinación indispensable. Uno prueba el comportamiento real y el otro audita la mantenibilidad futura.
 3. **Criterio de aprobación:** Un proyecto puede tener 100% de tests en verde y aun así requerir correcciones de diseño estructural antes de ser fusionado a la rama principal.
+
+---
+
+## Entrada 32: Iteración de Refactorización basada en Peer Review (OCP, SRP y Leyes Físicas)
+**Fecha:** 16 de Agosto de 2026
+**Fase:** Día 6 - Refactorización post-revisión y Cierre de Semana
+
+**Contexto:** Tras recibir dos revisiones de código de pares (Peer Reviews), se tomó la decisión técnica de no realizar el *Merge* a `main` inmediatamente. En su lugar, se utilizó a la IA como copiloto estratégico para implementar las sugerencias de mejora arquitectónica de forma segura, respetando la estructura existente y garantizando que la cobertura de pruebas no decayera.
+
+**Prompt utilizado:**
+> "Quiero que me ayudes a implementar estas mejoras de refactorización paso a paso [basadas en el feedback de Alexander y Julián]. Alto. Todavía no apliques cambios. Considero que es mejor que te cargue los archivos al igual que lo hice cuando revisamos a mis compañeros, para no cometer errores y poder realizar los cambios de la deuda técnica correctamente."
+
+**¿Qué produjo la IA?**
+La IA procesó todo el árbol de archivos (routers, services, repos, schemas, tests) y generó una estrategia de refactorización en 3 fases:
+1. **Dominio:** Creación de `SensorNotFoundError` y `SensorAlreadyExistsError` para reemplazar los `ValueError` genéricos, limpiando el manejo global en `main.py`. Renombramiento de la interfaz a `AlertNotificationStrategy` (OCP).
+2. **Persistencia y Pydantic:** Implementación de `session.rollback()` dentro de bloques `try/except` en el repositorio SQL para proteger transacciones. Adición de `allow_inf_nan=False` y límites de paginación estrictos.
+3. **Pruebas y Física:** Programación del límite del cero absoluto ($-273.15^\circ\text{C}$) en `conversions.py` y sustitución de un `MagicMock` opaco por un patrón `SpyAlertStrategy` explícito en los tests unitarios.
+
+**Decisión y Criterio Técnico (El valor humano):**
+- **Veredicto:** ACEPTADO CON INTERVENCIÓN CRÍTICA.
+- **Por qué:** Durante la fase 3, la IA cometió un error de contexto: generó un bloque de código que pretendía reemplazar el archivo de pruebas `test_services_core.py` completo, lo que habría borrado más de 140 líneas de tests preexistentes.
+- **Intervención:** Como ingeniero a cargo, detuve la copia ciega (*copy-paste*), identifiqué la sobreescritura destructiva, revertí el cambio en VS Code e instruí a la IA para que proporcionara únicamente la modificación *quirúrgica* de la línea de aserción defectuosa (`pytest.raises(SensorNotFoundError)`). Además, se tuvo que resolver manualmente una desincronización residual en Mypy (`__init__.py` faltante) y un error de expresión regular en un `match` de Pytest.
+- **Resultado:** La suite pasó de estar rota a obtener un **100% de éxito (20/20)**, una cobertura del **86.42%**, cero advertencias de formato (Ruff) y cero quejas de tipado estricto (Mypy). Se demostró que la IA amplifica la velocidad de refactorización, pero el ingeniero es el responsable final de la integridad del código fuente.
