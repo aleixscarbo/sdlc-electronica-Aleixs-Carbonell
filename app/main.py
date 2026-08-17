@@ -1,18 +1,35 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 
-# Importamos los routers
+from app.models import AlertModel, ReadingModel, SensorModel  # noqa: F401
 from app.routers import readings, sensors
+from app.services.exceptions import SensorAlreadyExistsError, SensorNotFoundError
 
-# 1. Inicializar la app
 app = FastAPI(title="SensorHub API", version="1.0.0")
 
-# ---> INYECCIÓN DEL HEALTH CHECK PARA RENDER <---
-@app.get("/health")
-def health_check() -> dict[str, str]:
-    """Endpoint para que la nube de Render sepa que la API está viva."""
-    return {"status": "ok"}
-# ------------------------------------------------
 
-# 2. Soldar los pines (Registrar los routers)
+@app.exception_handler(SensorNotFoundError)
+def sensor_not_found_handler(
+    request: Request, exc: SensorNotFoundError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND, content={"detail": str(exc)}
+    )
+
+
+@app.exception_handler(SensorAlreadyExistsError)
+def sensor_already_exists_handler(
+    request: Request, exc: SensorAlreadyExistsError
+) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_409_CONFLICT, content={"detail": str(exc)}
+    )
+
+
+@app.get("/health", tags=["Health"])
+def health_check() -> dict[str, str]:
+    return {"status": "ok"}
+
+
 app.include_router(sensors.router)
 app.include_router(readings.router)

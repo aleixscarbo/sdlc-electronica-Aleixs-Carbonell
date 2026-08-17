@@ -17,7 +17,7 @@ def get_reading(
     reading = service.get_reading(reading_id)
     if not reading:
         raise HTTPException(status_code=404, detail="Lectura no encontrada")
-    return reading  # type: ignore
+    return ReadingOut.model_validate(reading)
 
 
 @router.patch("/{reading_id}", response_model=ReadingOut)
@@ -30,7 +30,7 @@ def update_reading(
     reading = service.update_reading(reading_id, data)
     if not reading:
         raise HTTPException(status_code=404, detail="Lectura no encontrada")
-    return reading  # type: ignore
+    return ReadingOut.model_validate(reading)
 
 
 @router.delete("/{reading_id}", status_code=204)
@@ -38,6 +38,5 @@ def delete_reading(
     reading_id: int,
     service: Annotated[SensorHubService, Depends(get_sensor_hub_service)],
 ) -> None:
-    success = service.remove_reading(reading_id)
-    if not success:
+    if not service.delete_reading(reading_id):
         raise HTTPException(status_code=404, detail="Lectura no encontrada")

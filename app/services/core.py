@@ -2,19 +2,27 @@ from datetime import datetime
 
 from app.models import ReadingModel, SensorModel
 from app.repositories.base import SensorHubRepository
+from app.services.alerts import AlertNotificationStrategy, ConsoleAlertStrategy
+from app.services.exceptions import SensorAlreadyExistsError, SensorNotFoundError
 
 
 class SensorHubService:
-    """Lógica de negocio central. Audita la integridad relacional."""
+    """Lógica de negocio central. Audita la integridad relacional y anomalías."""
 
-    def __init__(self, repo: SensorHubRepository) -> None:
+    def __init__(
+        self,
+        repo: SensorHubRepository,
+        alert_strategy: AlertNotificationStrategy | None = None,
+    ) -> None:
         self._repo = repo
+        self._alert_strategy = alert_strategy or ConsoleAlertStrategy()
 
-    # --- SENSORES ---
-    def create_sensor(self, sensor_id: str, type: str, name: str) -> SensorModel:
+    def create_sensor(
+        self, sensor_id: str, type: str, name: str, threshold: float | None = None
+    ) -> SensorModel:
         if self._repo.get_sensor(sensor_id):
-            raise ValueError(f"El sensor con ID '{sensor_id}' ya existe.")
-        return self._repo.add_sensor(sensor_id, type, name)
+            raise SensorAlreadyExistsError(sensor_id)
+        return self._repo.add_sensor(sensor_id, type, name, threshold)
 
     def get_sensor(self, sensor_id: str) -> SensorModel | None:
         return self._repo.get_sensor(sensor_id)
@@ -25,12 +33,14 @@ class SensorHubService:
     def remove_sensor(self, sensor_id: str) -> bool:
         return self._repo.delete_sensor(sensor_id)
 
-    # --- LECTURAS ---
     def record_reading(self, sensor_id: str, value: float, unit: str) -> ReadingModel:
-        # Validación de integridad relacional: ¿Existe el sensor?
-        if not self._repo.get_sensor(sensor_id):
-            raise ValueError(f"El sensor '{sensor_id}' no existe. Créalo primero.")
-        # (Nota: La validación termodinámica ya la hizo Pydantic en los Schemas)
+        sensor = self._repo.get_sensor(sensor_id)
+        if not sensor:
+            raise SensorNotFoundError(sensor_id)
+
+        if sensor.threshold is not None and value > sensor.threshold:
+            self._alert_strategy.notify(sensor_id, value, sensor.threshold)
+
         return self._repo.add_reading(sensor_id, value, unit)
 
     def get_sensor_readings(
@@ -42,7 +52,7 @@ class SensorHubService:
         to_date: datetime | None,
     ) -> list[ReadingModel]:
         if not self._repo.get_sensor(sensor_id):
-            raise ValueError(f"El sensor '{sensor_id}' no existe.")
+            raise SensorNotFoundError(sensor_id)
         return self._repo.list_readings(sensor_id, limit, offset, from_date, to_date)
 
     def get_reading(self, reading_id: int) -> ReadingModel | None:
@@ -51,5 +61,5 @@ class SensorHubService:
     def update_reading(self, reading_id: int, data: dict) -> ReadingModel | None:
         return self._repo.update_reading(reading_id, data)
 
-    def remove_reading(self, reading_id: int) -> bool:
+    def delete_reading(self, reading_id: int) -> bool:
         return self._repo.delete_reading(reading_id)

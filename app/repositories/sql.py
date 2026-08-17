@@ -1,9 +1,10 @@
 from datetime import datetime
 
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.models import ReadingModel, SensorModel
+from app.models import AlertModel, ReadingModel, SensorModel
 from app.repositories.base import SensorHubRepository
 
 
@@ -12,12 +13,18 @@ class SQLSensorHubRepository(SensorHubRepository):
         self.session = session
 
     # --- SENSORES ---
-    def add_sensor(self, sensor_id: str, type: str, name: str) -> SensorModel:
-        sensor = SensorModel(id=sensor_id, type=type, name=name)
-        self.session.add(sensor)
-        self.session.commit()
-        self.session.refresh(sensor)
-        return sensor
+    def add_sensor(
+        self, sensor_id: str, type: str, name: str, threshold: float | None = None
+    ) -> SensorModel:
+        sensor = SensorModel(id=sensor_id, type=type, name=name, threshold=threshold)
+        try:
+            self.session.add(sensor)
+            self.session.commit()
+            self.session.refresh(sensor)
+            return sensor
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
 
     def get_sensor(self, sensor_id: str) -> SensorModel | None:
         return self.session.get(SensorModel, sensor_id)
@@ -29,18 +36,26 @@ class SQLSensorHubRepository(SensorHubRepository):
     def delete_sensor(self, sensor_id: str) -> bool:
         sensor = self.get_sensor(sensor_id)
         if sensor:
-            self.session.delete(sensor)
-            self.session.commit()
-            return True
+            try:
+                self.session.delete(sensor)
+                self.session.commit()
+                return True
+            except SQLAlchemyError as e:
+                self.session.rollback()
+                raise e
         return False
 
     # --- LECTURAS ---
     def add_reading(self, sensor_id: str, value: float, unit: str) -> ReadingModel:
         reading = ReadingModel(sensor_id=sensor_id, value=value, unit=unit)
-        self.session.add(reading)
-        self.session.commit()
-        self.session.refresh(reading)
-        return reading
+        try:
+            self.session.add(reading)
+            self.session.commit()
+            self.session.refresh(reading)
+            return reading
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
 
     def get_reading(self, reading_id: int) -> ReadingModel | None:
         return self.session.get(ReadingModel, reading_id)
@@ -64,16 +79,41 @@ class SQLSensorHubRepository(SensorHubRepository):
     def update_reading(self, reading_id: int, data: dict) -> ReadingModel | None:
         reading = self.get_reading(reading_id)
         if reading:
-            for key, val in data.items():
-                setattr(reading, key, val)
-            self.session.commit()
-            self.session.refresh(reading)
-        return reading
+            try:
+                for key, val in data.items():
+                    setattr(reading, key, val)
+                self.session.commit()
+                self.session.refresh(reading)
+                return reading
+            except SQLAlchemyError as e:
+                self.session.rollback()
+                raise e
+        return None
 
     def delete_reading(self, reading_id: int) -> bool:
         reading = self.get_reading(reading_id)
         if reading:
-            self.session.delete(reading)
-            self.session.commit()
-            return True
+            try:
+                self.session.delete(reading)
+                self.session.commit()
+                return True
+            except SQLAlchemyError as e:
+                self.session.rollback()
+                raise e
         return False
+
+    # --- ALERTAS ---
+    def add_alert(self, sensor_id: str, value: float, threshold: float) -> AlertModel:
+        alert = AlertModel(sensor_id=sensor_id, value=value, threshold=threshold)
+        try:
+            self.session.add(alert)
+            self.session.commit()
+            self.session.refresh(alert)
+            return alert
+        except SQLAlchemyError as e:
+            self.session.rollback()
+            raise e
+
+    def list_alerts(self, sensor_id: str) -> list[AlertModel]:
+        stmt = select(AlertModel).where(AlertModel.sensor_id == sensor_id)
+        return list(self.session.scalars(stmt).all())

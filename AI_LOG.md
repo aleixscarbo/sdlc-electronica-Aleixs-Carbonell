@@ -379,3 +379,175 @@ La IA generó los bloques YAML para integrar la acción oficial de Trivy (`aquas
      *Por qué (Criterio Técnico):* Implementa un freno de mano operacional (Quality Gate), evitando que cambios accidentales o no revisados se desplieguen automáticamente en producción sin autorización explícita.
   3. *Cambio:* Se inyectó el script de notificación de fallos con etiquetas `['bug', 'urgente']`.
      *Por qué (Criterio Técnico):* Proporciona trazabilidad inmediata (Observabilidad de CI/CD) al equipo de ingeniería al notificar el Hash del commit defectuoso y el enlace directo a los logs del error en caso de rupturas en `main`.
+
+---
+
+## [ENTRADA 22] Semana 5 - Día 1: Ingeniería de Prompts (A/B Testing)
+
+* **Fecha:** 12 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Contrastar la calidad del código generado por LLMs usando instrucciones genéricas vs. el patrón estructurado `[Contexto + Tarea + Restricciones + Entrega]`. Se evaluaron 3 capas críticas de SensorHub: Validación física (Pydantic), Consultas analíticas (SQLAlchemy 2.0) y Pruebas E2E (Pytest).
+
+### Análisis de la Interacción:
+* **Prompt Estructurado:** Se forzó a la IA a actuar bajo restricciones de versión (Python 3.12, SQLAlchemy 2.x) y a entregar resultados sin explicaciones.
+* **Respuesta de la IA (Contraste):**
+  * *Prompt Pobre:* Generó código obsoleto (sintaxis vieja de bases de datos), ignoró los type hints y añadió "charlatanería" (texto innecesario). En Pydantic, no controló profesionalmente la excepción.
+  * *Prompt Bueno:* Entregó código de grado de producción. Respetó `func.avg` de SQLAlchemy 2.0, estructuró la prueba de integración con el patrón Arrange-Act-Assert (AAA) y obedeció la restricción de omitir texto adicional.
+* **Veredicto y Criterio Técnico:** Se comprueba empíricamente que un LLM optimiza plausibilidad, no corrección. Si no se acota el espacio de soluciones, alucinará convenciones obsoletas. Como Ingeniero de Software, asumo la responsabilidad del "contexto"; el código generado solo es tan bueno como las restricciones arquitectónicas que le impongo. El código del prompt estructurado pasa el criterio para ser revisado en un PR, el del pobre es rechazado.
+
+---
+
+## [ENTRADA 23] Semana 5 - Día 2: Ensayo con Agentes Autónomos e Incompatibilidad de Dependencias
+
+* **Fecha:** 12 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Instalar y ejecutar Aider acoplado a Gemini 1.5 Pro en la terminal para pair programming automatizado.
+* **Incidencia Técnica:** Falla de compilación durante `pip install aider-chat`.
+* **Análisis Forense:** El proceso colapsa al intentar construir la rueda (wheel) de la dependencia `numpy==1.24.3`. El error `AttributeError: module 'pkgutil' has no attribute 'ImpImporter'` revela que la versión de Python del sistema (3.14+) ha deprecado módulos que las librerías antiguas de Aider aún necesitan para compilar desde el código fuente en Windows.
+* **Resolución y Criterio:** Siguiendo la premisa de la Guía del Estudiante, se aborta la instalación local para evitar corromper el entorno virtual y se procede a realizar el ejercicio equivalente utilizando GitHub Copilot Chat directamente en VS Code. El foco se mantiene en la arquitectura y la trazabilidad, no en la herramienta específica.
+
+---
+
+## [ENTRADA 24] Semana 5 - Día 3: Code Review y Testing Asistido por IA (Mocks)
+
+* **Fecha:** 13 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Utilizar Copilot como auditor de código estricto sobre `app/services/core.py` para detectar vulnerabilidades, violaciones SOLID y casos borde, forzando la generación de pruebas unitarias aisladas (`Mocks`).
+* **Análisis Forense (Code Review):** * La IA arrojó 7 hallazgos. Se demostró que la IA carece de contexto arquitectónico global, sugiriendo blindajes contra SQL Injection o validación de paginación en la capa de Servicios, ignorando que SQLAlchemy y Pydantic (en Routers) ya manejan esos vectores de ataque. Esos hallazgos fueron RECHAZADOS con justificación técnica.
+  * Se ACEPTARON los hallazgos relacionados estrictamente con la lógica de negocio (Fechas ilógicas, manejo de excepciones de base de datos y la sugerencia de Soft Delete).
+* **Impacto en Testing:** La IA generó 7 sub-tests para cubrir casos borde (sensores inexistentes, valores numéricos infinitos `float('inf')`, duplicidad de IDs). Se implementó `unittest.mock.MagicMock` para aislar el repositorio.
+* **Veredicto y Criterio Técnico:** El uso de IA es excepcional para la generación de casos de prueba paramétricos y detección de flujos anómalos. La cobertura de la capa de Servicios aumentó a 97% y la cobertura global a 90.53%. Se reafirma la regla del "Colega Junior": la IA escribe las pruebas, pero el Ingeniero defiende la arquitectura.
+
+---
+
+## [ENTRADA 25] Semana 5 - Misión Secundaria: Refactorización y Deuda Técnica (FastAPI/Starlette)
+
+* **Fecha:** 13 de Agosto de 2026
+* **Rama de trabajo:** `refactor/test-coverage`
+* **Contexto/Objetivo de la Sesión:** Eliminar la deuda técnica manifestada en el aviso `StarletteDeprecationWarning` al ejecutar la suite de pruebas y preparar el terreno para aumentar la cobertura de la base de datos a un estándar $>95\%$.
+* **Análisis Forense (Modernización de Tests):**
+  * *El Problema:* El uso del cliente síncrono `TestClient` de FastAPI/Starlette está deprecado cuando se combina con versiones modernas de `httpx`.
+  * *La Intervención:* Se utilizó Copilot para analizar los archivos `tests/test_api.py` y `tests/smoke_test.py`.
+  * *Resultado Técnico:* La IA propuso correctamente la migración del ecosistema de pruebas a un paradigma 100% asíncrono utilizando `httpx.AsyncClient` acoplado con `ASGITransport`. Se reescribieron los tests utilizando decoradores `@pytest.mark.anyio` y corrutinas `async def`.
+* **Veredicto y Criterio Técnico:** El refactor fue un éxito absoluto. La terminal ahora reporta 0 warnings y la suite se ejecuta en $<5$ segundos. Esta intervención demuestra que el código generado por IA no solo sirve para crear funcionalidades (features), sino que es una herramienta de primer nivel para **mantenimiento adaptativo** frente a librerías de terceros que evolucionan y rompen la compatibilidad hacia atrás.
+
+---
+
+## [ENTRADA 26] Semana 5 - Misión Secundaria: Cobertura Extrema en Persistencia y Failover de IA
+
+* **Fecha:** 13 de Agosto de 2026
+* **Rama de trabajo:** `refactor/test-coverage`
+* **Contexto/Objetivo de la Sesión:** Atacar la deuda de cobertura en los archivos de infraestructura (`app/db.py` y `app/repositories/sql.py`) que contaban con un 70% y 86% respectivamente.
+* **Incidencia Técnica y Failover:** Durante la ejecución, el agente primario (GitHub Copilot) alcanzó su límite mensual de créditos (HTTP 429 Too Many Requests / Quota Exceeded). Como plan de contingencia (failover), se migró el contexto inmediatamente a Gemini para continuar la generación de código sin romper el flujo de trabajo.
+* **Análisis Forense (Mocking de Base de Datos):** * Se diseñó el archivo `tests/test_db_and_repo.py` aislando por completo la base de datos real.
+  * Se empleó `unittest.mock.MagicMock` y `patch` para simular las variables de entorno de Render (`DATABASE_URL`), el generador de sesiones (`SessionLocal`) y los retornos vacíos (`None`) de SQLAlchemy.
+* **Veredicto y Criterio Técnico:** Se superó la barrera del 95% de cobertura global (95.06%), probando satisfactoriamente caminos de error en la BD sin necesidad de levantar un motor real. Se comprobó que tener redundancia de LLMs (Copilot + Gemini) es crítico para mantener la continuidad operativa en el desarrollo asistido por IA.
+
+---
+
+## [ENTRADA 27] Semana 5 - Día 4: Documentación Arquitectónica (ADR) y Evaluación Monolito vs Microservicios
+
+* **Fecha:** 14 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Redactar el primer Architecture Decision Record (ADR 0001) para formalizar la elección de la Arquitectura en Capas en SensorHub y sintetizar las lecturas de Martin Fowler (*Microservices* y *MonolithFirst*).
+
+### Análisis Forense de la Interacción y Criterio Técnico:
+* **Generación del ADR:** Se estructuró el documento bajo el estándar Nygard (Estado, Contexto, Decisión, Consecuencias). Se enfatizó que la capa de servicio se abstrae mediante `Protocol` (DIP), lo que posibilitó la suite de 18 pruebas automatizadas con 95.06% de cobertura alcanzada en sesiones previas.
+* **Evaluación Arquitectónica (Fowler):** Se fundamentó por qué SensorHub debe ser un *Monolito Modular* y no una red de microservicios. Crear microservicios prematuros para un sistema de telemetría IoT inicial introduciría la "prima de complejidad de microservicios" (latencia de red, consistencia eventual, fallos distribuidos) sin obtener beneficios de escala organizacional.
+* **Decisión de Ingeniería:** Se aprueba el ADR 0001 en el repositorio como documento vivo de diseño. La arquitectura actual se defenderá como monolito modular desacoplado en la evaluación síncrona.
+
+---
+
+## [ENTRADA 28] Semana 5 - Día 5: Ejercicio Integrador (Feature de Anomalías con TDD y OCP)
+
+* **Fecha:** 14 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Desarrollar una funcionalidad de extremo a extremo para la detección y notificación de anomalías (umbrales térmicos) usando TDD estricto y la IA como "Pair Programmer".
+* **Estrategia de Prompts (Fases):**
+  1. *Fase RED:* Se solicitó a la IA generar pruebas unitarias aisladas simulando la inyección de una estrategia de alertas y un sensor con `threshold`.
+  2. *Fase GREEN:* Se solicitó implementar el patrón *Strategy* (`AlertStrategy`, `DatabaseAlertStrategy`) y modificar `SensorHubService` para aislar la lógica y pasar las pruebas.
+  3. *Fase REFACTOR/INTEGRATION:* Se solicitaron las modificaciones estructurales en los modelos SQLAlchemy, esquemas Pydantic y el Router para persistir y exponer la API.
+* **Qué generó la IA y qué se cambió (Criterio Técnico):**
+  * *Generación:* La IA propuso correctamente la interfaz `Protocol` para cumplir con OCP (Principio Abierto/Cerrado), permitiendo inyectar `DatabaseAlertStrategy` sin alterar la lógica central.
+  * *Adaptación:* Se debió intervenir el código sugerido para corregir un `TypeError` en el Router, ya que la IA había desfasado la cantidad de parámetros posicionales al ignorar un campo opcional. También fue necesario purgar la base de datos local (SQLite) para forzar a SQLAlchemy a crear la nueva tabla `alerts`.
+* **Resultado:** Feature implementada con 100% de éxito. El sistema ahora evalúa lecturas contra umbrales dinámicos y persiste las anomalías en la base de datos.
+
+---
+
+## Entrada 29: Resolución de Conflictos de Migración en Producción (SQLAlchemy vs Alembic)
+**Fecha:** 14 de Agosto de 2026
+**Fase:** Día 5 - Ejercicio Integrador (Despliegue y Persistencia)
+
+**Contexto:** Tras implementar el modelo de `Alerts` y agregar la columna `threshold` a `Sensors`, el despliegue en Render colapsó con un Error 500. Los logs arrojaban `psycopg.errors.DuplicateTable` y posteriormente `UndefinedColumn: column sensors.threshold does not exist`.
+
+**Prompts utilizados:**
+- "El CI de mi pipeline pasó con todos los tests en check, pero el deploy en Render falló, estos son los logs: psycopg.errors.DuplicateTable: relation 'alerts' already exists"
+- "Ahora mi swagger no funciona, los logs arrojan: UndefinedColumn: column sensors.threshold does not exist"
+
+**¿Qué generó la IA?**
+La IA diagnosticó una condición de carrera (race condition) clásica en producción: `Base.metadata.create_all()` de SQLAlchemy se ejecutó antes que Alembic. SQLAlchemy creó la tabla `alerts` nueva, pero ignoró la tabla `sensors` porque ya existía, omitiendo la creación de la nueva columna `threshold`.
+La IA sugirió dos acciones:
+1. Eliminar `create_all()` del código.
+2. Ejecutar un script remoto con SQL crudo (vía `psycopg`) para hacer un `DROP TABLE CASCADE` incluyendo la tabla `alembic_version` en Render, saltando la caché de la plataforma.
+
+**¿Qué cambié y por qué (Criterio Técnico)?**
+- **Cambiado:** Comenté definitivamente la línea `# Base.metadata.create_all(bind=engine)` en `app/main.py`.
+- **Por qué:** En una arquitectura madura que utiliza bases de datos relacionales en la nube, la herramienta de migraciones (Alembic) debe tener el monopolio absoluto sobre el esquema de la base de datos (Schema Control). Permitir que SQLAlchemy intente crear tablas dinámicamente destruye la trazabilidad de las migraciones y causa inconsistencias estructurales como la falta de la columna `threshold`. Con esto, la API quedó estable, devolviendo `201 Created` al disparar anomalías reales en producción.
+
+---
+
+## Entrada 30: Experimento Comparativo de Code Review (Humano vs. IA)
+**Fecha:** 15 de Agosto de 2026
+**Fase:** Día 6 - Peer Review Ronda 2 y Cierre de Semana
+
+**Contexto:** Realización de una auditoría comparativa de código sobre el PR de un compañero utilizando el instrumento `Checklist_10_puntos_Peer_Review_Semana3.pdf`. Se contrastó el análisis local ejecutable (consola/pytest) contra un review automatizado por IA usando un prompt estructurado de Staff SWE.
+
+**Prompt utilizado:**
+> "Actúa como un Staff Software Engineer estricto pero constructivo. Realiza un Code Review de los archivos adjuntos utilizando ÚNICAMENTE los criterios del Checklist_10_puntos_Peer_Review_Semana3.pdf. Ignora el estilo o formateo menor; enfócate en diseño, inyección de dependencias, fugas de lógica de negocio en los routers, validaciones de Pydantic, manejo de sesiones de SQLAlchemy y calidad de las pruebas. Genera al menos dos observaciones críticas usando el formato exacto `archivo:línea - qué observaste - qué propones`, y sugiere una pregunta de diseño profunda para el autor."
+
+**¿Qué produjo la IA vs. Qué detectó el Humano?**
+- **Hallazgo exclusivo del Humano:** Al clonar el repositorio y ejecutar `pytest -v` en la consola local, el humano identificó un *warning* de degradación en la suite de pruebas (`StarletteDeprecationWarning: Using httpx with starlette.testclient is deprecated`). La IA, al evaluar únicamente la estructura sintáctica de los archivos estáticos, fue incapaz de anticipar este comportamiento en tiempo de ejecución.
+- **Hallazgo exclusivo de la IA:** La IA detectó de inmediato un antipatrón de diseño sutil en `app/services/sensor_service.py:28` (uso de `hasattr`/`getattr` con reflexión dinámica para adivinar nombres de métodos del repositorio). El humano lo había interpretado como una "defensa contra errores", pero la IA demostró que rompe el tipado de `mypy` y viola la Inversión de Dependencias (DIP).
+
+**Conclusiones Clave sobre la IA en Code Reviews:**
+1. **La IA es un amplificador de análisis estático, no un ejecutor:** La IA destaca identificando antipatrones de diseño, acoplamiento y faltas de abstracción en archivos grandes. Sin embargo, no sustituye la ejecución real del código en una terminal local ni la inspección de *warnings* en tiempo de ejecución.
+2. **El contexto de producción requiere criterio de ingeniería:** La IA puede marcar la captura de excepciones genéricas, pero corresponde al ingeniero juzgar el impacto real que esto causa en producción (como las fallas de despliegue entre `create_all()` y Alembic).
+3. **Objetividad y sesgo:** El uso de prompts estructurados junto con una checklist objetiva elimina los sesgos personales durante la revisión entre pares, enfocando la discusión puramente en calidad de software, principios SOLID y mantenibilidad.
+
+---
+
+## Entrada 31: Segunda Ronda de Peer Review y Detección de Antipatrores de Pruebas (Test-Induced Design Damage)
+**Fecha:** 16 de Agosto de 2026
+**Fase:** Día 6 - Peer Review Ronda 2 (Evaluación de Par)
+
+**Contexto:** Realización del segundo ejercicio de Peer Review sobre el repositorio de un compañero, aplicando la lista de cotejo de 10 puntos (`Checklist_10_puntos_Peer_Review_Semana3.pdf`) para contrastar hallazgos de ejecución en terminal local contra análisis estático realizado por IA.
+
+**Prompt utilizado:**
+> "Actúa como un Staff Software Engineer estricto pero constructivo. Realiza un Code Review de los archivos adjuntos utilizando ÚNICAMENTE los criterios del Checklist_10_puntos_Peer_Review_Semana3.pdf. Ignora el estilo o formateo menor; enfócate en diseño, inyección de dependencias, fugas de lógica de negocio en los routers, validaciones de Pydantic, manejo de sesiones de SQLAlchemy y calidad de las pruebas. Genera al menos dos observaciones críticas usando el formato exacto `archivo:línea - qué observaste - qué propones`, y sugiere una pregunta de diseño profunda para el autor."
+
+**¿Qué produjo la IA vs. Qué detectó el Humano?**
+- **Hallazgo exclusivo del Humano:** Al ejecutar `pytest -v` en la terminal local, el humano verificó la presencia del *warning* `StarletteDeprecationWarning` derivado de la desactualización de `TestClient` con `httpx`. Además, la ejecución confirmó que 16/16 pruebas pasaron exitosamente a pesar de las inconsistencias internas de diseño.
+- **Hallazgo exclusivo de la IA:** La IA detectó una falla sutil de arquitectura conocida como *Test-Induced Design Damage* en `app/services/reading_service.py:27`, donde el autor degradó la seguridad de tipos del código de producción con `getattr()` para evitar que sus objetos de prueba (*fakes*) arrojaran un `AttributeError`.
+
+**Conclusiones Clave sobre la IA en Code Reviews:**
+1. **Detección de contaminación entre entorno de test y producción:** La IA es sumamente eficiente identificando cuando el código de producción se ensucia o debilita para complacer a las pruebas unitarias.
+2. **Complementariedad necesaria:** El review humano (ejecutando comandos reales en la consola) y el review de IA (analizando patrones estáticos) forman una combinación indispensable. Uno prueba el comportamiento real y el otro audita la mantenibilidad futura.
+3. **Criterio de aprobación:** Un proyecto puede tener 100% de tests en verde y aun así requerir correcciones de diseño estructural antes de ser fusionado a la rama principal.
+
+---
+
+## Entrada 32: Iteración de Refactorización basada en Peer Review (OCP, SRP y Leyes Físicas)
+**Fecha:** 16 de Agosto de 2026
+**Fase:** Día 6 - Refactorización post-revisión y Cierre de Semana
+
+**Contexto:** Tras recibir dos revisiones de código de pares (Peer Reviews), se tomó la decisión técnica de no realizar el *Merge* a `main` inmediatamente. En su lugar, se utilizó a la IA como copiloto estratégico para implementar las sugerencias de mejora arquitectónica de forma segura, respetando la estructura existente y garantizando que la cobertura de pruebas no decayera.
+
+**Prompt utilizado:**
+> "Quiero que me ayudes a implementar estas mejoras de refactorización paso a paso [basadas en el feedback de Alexander y Julián]. Alto. Todavía no apliques cambios. Considero que es mejor que te cargue los archivos al igual que lo hice cuando revisamos a mis compañeros, para no cometer errores y poder realizar los cambios de la deuda técnica correctamente."
+
+**¿Qué produjo la IA?**
+La IA procesó todo el árbol de archivos (routers, services, repos, schemas, tests) y generó una estrategia de refactorización en 3 fases:
+1. **Dominio:** Creación de `SensorNotFoundError` y `SensorAlreadyExistsError` para reemplazar los `ValueError` genéricos, limpiando el manejo global en `main.py`. Renombramiento de la interfaz a `AlertNotificationStrategy` (OCP).
+2. **Persistencia y Pydantic:** Implementación de `session.rollback()` dentro de bloques `try/except` en el repositorio SQL para proteger transacciones. Adición de `allow_inf_nan=False` y límites de paginación estrictos.
+3. **Pruebas y Física:** Programación del límite del cero absoluto ($-273.15^\circ\text{C}$) en `conversions.py` y sustitución de un `MagicMock` opaco por un patrón `SpyAlertStrategy` explícito en los tests unitarios.
+
+**Decisión y Criterio Técnico (El valor humano):**
+- **Veredicto:** ACEPTADO CON INTERVENCIÓN CRÍTICA.
+- **Por qué:** Durante la fase 3, la IA cometió un error de contexto: generó un bloque de código que pretendía reemplazar el archivo de pruebas `test_services_core.py` completo, lo que habría borrado más de 140 líneas de tests preexistentes.
+- **Intervención:** Como ingeniero a cargo, detuve la copia ciega (*copy-paste*), identifiqué la sobreescritura destructiva, revertí el cambio en VS Code e instruí a la IA para que proporcionara únicamente la modificación *quirúrgica* de la línea de aserción defectuosa (`pytest.raises(SensorNotFoundError)`). Además, se tuvo que resolver manualmente una desincronización residual en Mypy (`__init__.py` faltante) y un error de expresión regular en un `match` de Pytest.
+- **Resultado:** La suite pasó de estar rota a obtener un **100% de éxito (20/20)**, una cobertura del **86.42%**, cero advertencias de formato (Ruff) y cero quejas de tipado estricto (Mypy). Se demostró que la IA amplifica la velocidad de refactorización, pero el ingeniero es el responsable final de la integridad del código fuente.
