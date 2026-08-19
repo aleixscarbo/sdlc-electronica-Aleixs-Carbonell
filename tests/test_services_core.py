@@ -58,6 +58,7 @@ class TestGetSensorReadingsSensorNotFound:
         ):
             service.record_reading(sensor_id=sensor_id, value=value, unit=unit)
 
+
 class TestCreateSensorAlreadyExists:
     """Test 3: create_sensor lanza ValueError si el ID ya existe."""
 

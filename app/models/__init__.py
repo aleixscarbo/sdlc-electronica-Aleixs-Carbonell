@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Float, ForeignKey, String
+from sqlalchemy import DateTime, Float, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -16,6 +16,12 @@ class SensorModel(Base):
 
     # Relación: Un sensor tiene muchas lecturas
     readings: Mapped[list["ReadingModel"]] = relationship(
+        back_populates="sensor", cascade="all, delete-orphan"
+    )
+
+    # ¡NUEVO! Relación: Un sensor tiene muchas
+    # alertas (EL PUENTE BIDIRECCIONAL FALTANTE)
+    alerts: Mapped[list["AlertModel"]] = relationship(
         back_populates="sensor", cascade="all, delete-orphan"
     )
 
@@ -40,6 +46,9 @@ class AlertModel(Base):
     sensor_id: Mapped[str] = mapped_column(ForeignKey("sensors.id"), index=True)
     value: Mapped[float] = mapped_column(Float)
     threshold: Mapped[float] = mapped_column(Float)
-    timestamp: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),  # <-- Generación automática en PostgreSQL/SQLite
+        nullable=False,
     )
+    sensor: Mapped["SensorModel"] = relationship(back_populates="alerts")
