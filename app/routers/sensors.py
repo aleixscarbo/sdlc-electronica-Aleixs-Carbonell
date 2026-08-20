@@ -16,7 +16,7 @@ def create_sensor(
     service: Annotated[SensorHubService, Depends(get_sensor_hub_service)],
 ) -> SensorOut:
     sensor = service.create_sensor(
-        payload.id, payload.type, payload.name, payload.threshold
+        payload.id, payload.type, payload.name, payload.location, payload.threshold
     )
     return SensorOut.model_validate(sensor)
 

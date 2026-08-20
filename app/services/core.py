@@ -18,11 +18,16 @@ class SensorHubService:
         self._alert_strategy = alert_strategy or ConsoleAlertStrategy()
 
     def create_sensor(
-        self, sensor_id: str, type: str, name: str, threshold: float | None = None
+        self,
+        sensor_id: str,
+        type: str,
+        name: str,
+        location: str,
+        threshold: float | None = None,
     ) -> SensorModel:
         if self._repo.get_sensor(sensor_id):
             raise SensorAlreadyExistsError(sensor_id)
-        return self._repo.add_sensor(sensor_id, type, name, threshold)
+        return self._repo.add_sensor(sensor_id, type, name, location, threshold)
 
     def get_sensor(self, sensor_id: str) -> SensorModel | None:
         return self._repo.get_sensor(sensor_id)

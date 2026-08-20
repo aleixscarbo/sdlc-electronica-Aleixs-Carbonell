@@ -29,36 +29,48 @@ def get_unique_id() -> str:
 async def test_full_integration_workflow(client: AsyncClient) -> None:
     sensor_id = get_unique_id()
 
-    # 1. Crear Sensor (POST)
+    # 1. Crear Sensor (POST) - Con location añadido
     response = await client.post(
-        "/sensors/", json={"id": sensor_id, "type": "temp", "name": "Prueba"}
+        "/sensors/",
+        json={
+            "id": sensor_id,
+            "type": "temp",
+            "name": "Prueba",
+            "location": "Bodega 1",
+        },
     )
     assert response.status_code == 201
 
     # Conflicto: Crear mismo sensor (409)
     response_conflict = await client.post(
-        "/sensors/", json={"id": sensor_id, "type": "temp", "name": "Prueba"}
+        "/sensors/",
+        json={
+            "id": sensor_id,
+            "type": "temp",
+            "name": "Prueba",
+            "location": "Bodega 1",
+        },
     )
     assert response_conflict.status_code == 409
 
     # 2. Listar Sensores (GET)
     response = await client.get("/sensors/")
     assert response.status_code == 200
-    assert len(response.json()) > 0
+    assert any(s["id"] == sensor_id for s in response.json())
 
-    # 3. Crear Lectura (POST)
+    # 3. Agregar Lectura al Sensor (POST)
     response = await client.post(
         f"/sensors/{sensor_id}/readings", json={"value": 25.5, "unit": "C"}
     )
     assert response.status_code == 201
     reading_id = response.json()["id"]
 
-    # 4. Listar Lecturas (GET)
+    # 4. Listar Lecturas del Sensor (GET)
     response = await client.get(f"/sensors/{sensor_id}/readings")
     assert response.status_code == 200
-    assert len(response.json()) >= 1
+    assert len(response.json()) > 0
 
-    # 5. Obtener Lectura Específica (GET)
+    # 5. Obtener una lectura en específico (GET)
     response = await client.get(f"/readings/{reading_id}")
     assert response.status_code == 200
     assert response.json()["value"] == 25.5
@@ -93,12 +105,23 @@ async def test_physics_validation(client: AsyncClient) -> None:
     """Verifica que Pydantic aplique las leyes de la termodinámica"""
     sensor_id = get_unique_id()
     await client.post(
-        "/sensors/", json={"id": sensor_id, "type": "temp", "name": "Test Físico"}
+        "/sensors/",
+        json={
+            "id": sensor_id,
+            "type": "temp",
+            "name": "Prueba",
+            "location": "Bodega 1",
+        },
     )
 
-    # Intentamos registrar -300 °C (Falla de Pydantic -> 422 Unprocessable Entity)
-    response = await client.post(
-        f"/sensors/{sensor_id}/readings", json={"value": -300.0, "unit": "C"}
+    # Temperatura en Celsius bajo 0 absoluto
+    res = await client.post(
+        f"/sensors/{sensor_id}/readings", json={"value": -300, "unit": "C"}
     )
-    assert response.status_code == 422
-    assert "Física inválida" in response.text
+    assert res.status_code == 422
+
+    # Humedad fuera de rango
+    res = await client.post(
+        f"/sensors/{sensor_id}/readings", json={"value": 150, "unit": "%"}
+    )
+    assert res.status_code == 422

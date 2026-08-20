@@ -7,7 +7,12 @@ from app.models import AlertModel, ReadingModel, SensorModel
 class SensorHubRepository(Protocol):
     # --- SENSORES ---
     def add_sensor(
-        self, sensor_id: str, type: str, name: str, threshold: float | None = None
+        self,
+        sensor_id: str,
+        type: str,
+        name: str,
+        location: str,
+        threshold: float | None = None,
     ) -> SensorModel: ...
     def get_sensor(self, sensor_id: str) -> SensorModel | None: ...
     def list_sensors(self, limit: int = 50, offset: int = 0) -> list[SensorModel]: ...
