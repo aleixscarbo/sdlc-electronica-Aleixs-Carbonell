@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -153,3 +153,34 @@ class SQLSensorHubRepository(SensorHubRepository):
             AlertModel.status.in_(["open", "acknowledged"]),
         )
         return list(self.session.scalars(stmt).all())
+
+    # --- ESTADÍSTICAS (RF-6) ---
+    def get_sensor_statistics(
+        self, 
+        sensor_id: str, 
+        from_date: datetime | None = None, 
+        to_date: datetime | None = None
+    ) -> dict[str, float]:
+        stmt = select(
+            func.min(ReadingModel.value).label("min"),
+            func.max(ReadingModel.value).label("max"),
+            func.avg(ReadingModel.value).label("avg"),
+        ).where(ReadingModel.sensor_id == sensor_id)
+
+        if from_date:
+            stmt = stmt.where(ReadingModel.created_at >= from_date)
+        if to_date:
+            stmt = stmt.where(ReadingModel.created_at <= to_date)
+
+        # scalar_one_or_none() devuelve una tupla con (min, max, avg)
+        result = self.session.execute(stmt).one_or_none()
+        
+        # Si no hay lecturas, SQL devuelve (None, None, None)
+        if not result or result.min is None:
+            return {"min": 0.0, "max": 0.0, "avg": 0.0}
+            
+        return {
+            "min": round(result.min, 2),
+            "max": round(result.max, 2),
+            "avg": round(result.avg, 2)
+        }
