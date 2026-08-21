@@ -86,8 +86,9 @@ class SensorHubService:
 
     def get_active_alerts(self, sensor_id: str) -> list[AlertModel]:
         return self._repo.list_active_alerts(sensor_id)
-    
+
         # --- ESTADÍSTICAS (RF-6) ---
+
     def get_sensor_stats(
         self,
         sensor_id: str,
@@ -96,5 +97,5 @@ class SensorHubService:
     ) -> dict[str, float]:
         if not self._repo.get_sensor(sensor_id):
             raise SensorNotFoundError(sensor_id)
-            
+
         return self._repo.get_sensor_statistics(sensor_id, from_date, to_date)

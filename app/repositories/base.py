@@ -47,8 +47,8 @@ class SensorHubRepository(Protocol):
 
     # --- ESTADÍSTICAS (RF-6) ---
     def get_sensor_statistics(
-        self, 
-        sensor_id: str, 
-        from_date: datetime | None = None, 
-        to_date: datetime | None = None
+        self,
+        sensor_id: str,
+        from_date: datetime | None = None,
+        to_date: datetime | None = None,
     ) -> dict[str, float]: ...

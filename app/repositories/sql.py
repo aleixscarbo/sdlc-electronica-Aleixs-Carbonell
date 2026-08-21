@@ -156,10 +156,10 @@ class SQLSensorHubRepository(SensorHubRepository):
 
     # --- ESTADÍSTICAS (RF-6) ---
     def get_sensor_statistics(
-        self, 
-        sensor_id: str, 
-        from_date: datetime | None = None, 
-        to_date: datetime | None = None
+        self,
+        sensor_id: str,
+        from_date: datetime | None = None,
+        to_date: datetime | None = None,
     ) -> dict[str, float]:
         stmt = select(
             func.min(ReadingModel.value).label("min"),
@@ -174,13 +174,13 @@ class SQLSensorHubRepository(SensorHubRepository):
 
         # scalar_one_or_none() devuelve una tupla con (min, max, avg)
         result = self.session.execute(stmt).one_or_none()
-        
+
         # Si no hay lecturas, SQL devuelve (None, None, None)
         if not result or result.min is None:
             return {"min": 0.0, "max": 0.0, "avg": 0.0}
-            
+
         return {
             "min": round(result.min, 2),
             "max": round(result.max, 2),
-            "avg": round(result.avg, 2)
+            "avg": round(result.avg, 2),
         }
