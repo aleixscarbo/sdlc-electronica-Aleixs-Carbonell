@@ -242,3 +242,36 @@ class TestAlertOperations:
 
         assert result == []
         mock_repo.list_active_alerts.assert_called_once_with("S1")
+
+class TestSensorStatistics:
+    """Pruebas para estadísticas de sensores (RF-6)."""
+
+    def test_get_sensor_stats_success(self) -> None:
+        mock_repo = MagicMock(spec=SensorHubRepository)
+        
+        # Simulamos que el sensor sí existe
+        mock_repo.get_sensor.return_value = MagicMock(spec=SensorModel)
+        
+        # Simulamos la respuesta matemática del repositorio (la BD)
+        expected_stats = {"min": 10.5, "max": 25.5, "avg": 18.0}
+        mock_repo.get_sensor_statistics.return_value = expected_stats
+
+        service = SensorHubService(repo=mock_repo)
+
+        # Act
+        result = service.get_sensor_stats(sensor_id="S1", from_date=None, to_date=None)
+
+        # Assert
+        assert result == expected_stats
+        mock_repo.get_sensor_statistics.assert_called_once_with("S1", None, None)
+
+    def test_get_sensor_stats_sensor_not_found(self) -> None:
+        mock_repo = MagicMock(spec=SensorHubRepository)
+        # Simulamos que el sensor no existe
+        mock_repo.get_sensor.return_value = None
+
+        service = SensorHubService(repo=mock_repo)
+
+        # Act & Assert
+        with pytest.raises(SensorNotFoundError, match="El sensor 'S1' no existe."):
+            service.get_sensor_stats(sensor_id="S1", from_date=None, to_date=None)
