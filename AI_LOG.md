@@ -641,3 +641,15 @@ Actuó como herramienta de diagnóstico SRE analizando los logs de producción e
 * **Lo que cambié respecto a lo generado y el porqué (Criterio Técnico):**
   * *Cambio:* Se modificó el modelo SQLAlchemy y el archivo de migración de Alembic para reemplazar `sa.func.now()` por el estándar universal `sa.text("CURRENT_TIMESTAMP")`. Se forzó la eliminación y reconstrucción de la base de datos local.
   * *Por qué (Criterio Técnico):* En una arquitectura profesional, el código ORM debe ser verdaderamente agnóstico al motor de base de datos. Depender de funciones exclusivas de un motor rompe la paridad entre desarrollo y producción. Al usar el estándar ANSI SQL, garantizamos que el pipeline de pruebas (SQLite) y el entorno de producción (Postgres) se comporten de manera idéntica.
+
+---
+
+## [ENTRADA 39] Semana 6 - Proyecto Final: Estadísticas Analíticas y Optimización SQL (RF-6)
+* **Fecha:** 21 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Implementar el Requisito Funcional 6 (RF-6) para obtener estadísticas (mínimo, máximo y promedio) de un sensor en un periodo determinado.
+* **Prompt Principal Utilizado:** *"no. asi se ve mi cmd: ... ERROR: Coverage failure: total of 22 is less than fail-under=80"*
+* **Uso de IA y Revisión de Código:** La IA identificó que la caída repentina de cobertura al 22% era un "falso negativo" provocado por ejecutar un solo archivo de prueba contra una regla global. Posteriormente, sugirió la implementación de la Fase GREEN delegando el cálculo al motor de base de datos.
+* **Lo que cambié respecto a lo generado y el porqué (Criterio Técnico):**
+  * *Cambio:* Se implementaron las funciones de agregación `func.min`, `func.max` y `func.avg` directamente en el Repositorio (SQLAlchemy) en lugar de extraer los registros y procesarlos en Python. Se agregó el esquema estricto `SensorStats`.
+  * *Por qué (Criterio Técnico):* Extraer miles de lecturas a la memoria de la aplicación web con un bucle `for` provocaría cuellos de botella y eventuales caídas por *Out of Memory* (OOM). Al delegar los cálculos de agregación al motor SQL, el consumo de memoria de la API se mantiene en $O(1)$, garantizando una escalabilidad masiva y una respuesta en milisegundos.
+

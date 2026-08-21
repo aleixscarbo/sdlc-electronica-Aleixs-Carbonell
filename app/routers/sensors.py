@@ -11,8 +11,10 @@ from app.schemas import (
     ReadingOut,
     SensorCreate,
     SensorOut,
+    SensorStats,
 )
 from app.services.core import SensorHubService
+from app.services.exceptions import SensorNotFoundError
 
 router = APIRouter(prefix="/sensors", tags=["Sensors"])
 
@@ -85,13 +87,25 @@ def update_sensor_alert(
 ) -> AlertOut:
     """Actualiza el estado de una alerta específica."""
     try:
-        # El servicio se encarga de validar que 
-        # el estado sea permitido (open, acknowledged, resolved)
         updated_alert = service.update_alert_status(alert_id, update_data.status)
         return AlertOut.model_validate(updated_alert)
     except ValueError as e:
-        # Si el error es por estado no permitido, devolvemos un 400 Bad Request
         if "Estado no permitido" in str(e):
             raise HTTPException(status_code=400, detail=str(e)) from e
-        # Si no encuentra la alerta, devolvemos un 404 Not Found
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+# --- ESTADÍSTICAS (RF-6) ---
+@router.get("/{sensor_id}/stats", response_model=SensorStats, status_code=200)
+def get_sensor_statistics(
+    sensor_id: str,
+    service: Annotated[SensorHubService, Depends(get_sensor_hub_service)],
+    from_date: Annotated[datetime | None, Query(alias="from")] = None,
+    to_date: Annotated[datetime | None, Query(alias="to")] = None,
+) -> SensorStats:
+    """Obtiene estadísticas matemáticas (mínimo, máximo, promedio) de un sensor."""
+    try:
+        stats_dict = service.get_sensor_stats(sensor_id, from_date, to_date)
+        return SensorStats.model_validate(stats_dict)
+    except SensorNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
