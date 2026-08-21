@@ -126,6 +126,7 @@ async def test_physics_validation(client: AsyncClient) -> None:
     )
     assert res.status_code == 422
 
+
 @pytest.mark.anyio
 async def test_health_check_metrics(client: AsyncClient) -> None:
     """Verifica que el endpoint de salud devuelva métricas de la BD (RF-7)."""
@@ -144,7 +145,7 @@ async def test_health_check_metrics(client: AsyncClient) -> None:
     # Consultamos el endpoint de salud
     response = await client.get("/health")
     assert response.status_code == 200
-    
+
     data = response.json()
     assert data["status"] == "ok"
     assert "db_status" in data, "Falta el estado de la base de datos"

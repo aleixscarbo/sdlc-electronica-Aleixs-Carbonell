@@ -88,6 +88,7 @@ class AlertOut(AlertBase):
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
 
+
 # --- ESQUEMAS PARA ESTADÍSTICAS (RF-6) ---
 class SensorStats(BaseModel):
     min: float = Field(..., description="Valor mínimo registrado")
