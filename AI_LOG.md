@@ -573,3 +573,60 @@ Actuó como herramienta de diagnóstico SRE analizando los logs de producción e
 - **Veredicto:** INTERVENCIÓN DIRECTA CONTRA EL CONSEJO DE LA IA (SOBRE DEUDA TÉCNICA Y LINTERS).
 - **Por qué (Rechazo de Deuda Técnica):** Tras aplicar el *hotfix* inicial, la IA sugirió que el código ya era apto para avanzar a la Semana 6. Ejerciendo mi criterio arquitectónico, rechacé la idea. En un sistema IoT, una alerta sin estampa de tiempo asegurada pierde todo valor forense. Era imperativo crear una rama de fix, modificar el esquema en PostgreSQL y asegurar la integridad de datos antes de continuar.
 - **Por qué (Rigor en CI/CD):** Al finalizar la refactorización, Ruff arrojó advertencias `E501 Line too long` en el archivo autogenerado de Alembic. La IA sugirió ignorar el error por ser código autogenerado. Rechacé tajantemente el consejo y corté las líneas de código de manera manual. En una arquitectura madura con integración continua (GitHub Actions), cualquier advertencia romperá el pipeline. Flexibilizar el *linter* sienta un mal precedente y destruye el estándar de "cero advertencias" del proyecto.
+
+---
+
+## [ENTRADA 34] Semana 6 - Proyecto Final: Implementación de RF-1 (Soft Delete) y RNF-2 (Cobertura)
+* **Fecha:** 20 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Inicio de la construcción del Proyecto Final (SensorHub). El objetivo fue refactorizar los modelos y repositorios para cumplir con el Requisito Funcional 1 (**RF-1**): agregar la ubicación del sensor e implementar el borrado lógico (Soft Delete), asegurando el cumplimiento del Requisito No Funcional 2 (**RNF-2**) de mantener una cobertura de pruebas superior al 80%.
+* **Prompt Principal Utilizado:** *"vamos con el repo"* (al solicitar la refactorización de `test_db_and_repo.py` para auditar las llamadas a SQLAlchemy).
+* **Uso de IA y Revisión de Código:** Utilicé a la IA para reescribir la suite de pruebas del repositorio, pasando de probar el borrado físico (`session.delete`) a auditar la mutación de estado (`sensor.is_active = False`). La IA proveyó los Mocks exactos de SQLAlchemy para validar que el commit se realizaba sin invocar instrucciones destructivas en la base de datos.
+* **Lo que cambié respecto a lo generado y el porqué (Criterio Técnico):**
+  * *Cambio:* Acepté la reestructuración de los tests e inyecté los nuevos campos `location` e `is_active` en todos los constructores de prueba.
+  * *Por qué (Criterio Técnico):* En un sistema de telemetría IoT, el borrado físico de un sensor es un antipatrón masivo porque corrompe el historial de lecturas (violación de integridad referencial). Al implementar el **RF-1** mediante Soft Delete, protegemos los datos históricos. La auditoría automatizada resultó en un **91.52% de cobertura**, cumpliendo y superando con creces la meta del **RNF-2**, demostrando que el código es robusto y está listo para producción.
+
+---
+
+## [ENTRADA 35] Semana 6 - Refactorización de Pruebas, Schema Drift y Variables en PowerShell
+* **Fecha:** 20 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Refactorizar la suite de pruebas (`test_services_core.py`, `test_db_and_repo.py`, `test_alerts.py`) para soportar los nuevos campos `location` e `is_active` (Soft Delete) manteniendo el patrón AAA y superando el 90% de cobertura.
+* **Prompt Principal Utilizado:** *"al correr pytest tests/ obtuve: sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: sensors.location"* y *"psycopg.errors.ConnectionTimeout: connection timeout expired"* al usar Alembic.
+* **Uso de IA y Revisión de Código:** La IA diagnosticó que las fallas de los tests se debían a "Schema Drift" (la base de datos local SQLite conservaba el esquema viejo sin la columna `location`). Posteriormente, cuando se intentó generar la migración de Alembic, la IA detectó que el comando `set DATABASE_URL` fallaba silenciosamente en PowerShell, provocando que Alembic buscara un servidor PostgreSQL inexistente.
+* **Lo que cambié respecto a lo generado y el porqué (Criterio Técnico):** 
+  1. *Cambio:* Eliminé físicamente el archivo `sensorhub.db` para forzar la regeneración del esquema desde cero en el entorno de pruebas, alcanzando un 91.52% de cobertura.
+  2. *Cambio:* Sustituí el comando de CMD por la sintaxis nativa de PowerShell (`$env:DATABASE_URL="sqlite:///sensorhub.db"`) para inyectar correctamente la variable de entorno, logrando que Alembic detectara los cambios y generara el archivo de migración necesario para el pipeline.
+
+---
+
+## [ENTRADA 36] Semana 6 - Git Branch Protection (GH006) y Shift-Left Testing
+* **Fecha:** 20 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Subir el código refactorizado a la nube. Por error, se ejecutó un push directamente a la rama `main` en lugar de la rama de trabajo `fix/migracion-rf1`.
+* **Prompt Principal Utilizado:** *"alto, la cague, le di push a main... remote: error: GH006: Protected branch update failed for refs/heads/main... Cannot force-push to this branch"*
+* **Uso de IA y Revisión de Código:** La IA me ayudó a interpretar el error GH006 no como un fallo, sino como el mecanismo de seguridad de GitHub (*Branch Protection Rules*) actuando correctamente para evitar la reescritura destructiva del historial en producción.
+* **Lo que cambié respecto a lo generado y el porqué (Criterio Técnico):**
+  1. *Cambio:* En lugar de forzar el sistema, sincronicé mi entorno local con la nube (`git reset --hard origin/main`), me moví a la rama correcta y realicé el push seguro. 
+  2. *Cambio:* Cuando el linter Ruff falló en GitHub Actions, en lugar de crear un commit "basura" (ej. "fix ruff"), utilicé `git commit --amend --no-edit` y `git push --force` sobre mi rama de trabajo.
+  *Por qué (Criterio Técnico):* Mantener un historial de commits atómico y limpio es una obligación profesional. El *amend* permitió fusionar la corrección estilística con el commit original, demostrando dominio sobre el árbol de Git sin violar las protecciones de la rama principal.
+
+---
+
+## [ENTRADA 37] Semana 6 - Debate Arquitectónico: Zero-Downtime Migrations
+* **Fecha:** 20 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Resolver la falla del pipeline de Continuous Deployment (CD) en Render. La migración de Alembic colapsó con `NotNullViolation` porque la tabla histórica de alertas en producción no aceptaba la nueva columna `status` sin un valor por defecto.
+* **Prompt Principal Utilizado:** *"antes de implementar, la solucion que me das, esta es la solucion mas profesional, no quiero aplicar un simple parque que depsues tenga que volver a atender."*
+* **Uso de IA y Revisión de Código:** Cuestioné la solución inicial de la IA (`server_default='open'`) exigiendo estándares de grado de producción. La IA me presentó el contraste entre la solución pragmática (1 línea) y la migración "Enterprise" en 3 pasos (permitir nulos $\rightarrow$ backfill $\rightarrow$ restringir nulos) usada en bases de datos masivas.
+* **Lo que cambié respecto a lo generado y el porqué (Criterio Técnico):**
+  * *Cambio:* Decidí implementar la Opción 1 (`server_default="open"`) y rechacé la migración manual en 3 pasos.
+  * *Por qué (Criterio Técnico):* Evaluando el tamaño actual de SensorHub, un `server_default` en PostgreSQL $\ge 11$ es una operación altamente optimizada que no bloquea la tabla (*Zero-Downtime Deployment*). Demostró que cuestionar a la IA previene la deuda técnica; confirmé que no era un "parche sucio" sino una práctica nativa de SQL plenamente defendible.
+
+---
+
+## [ENTRADA 38] Semana 6 - Resolución de Conflictos CI/CD y el Patrón DTO
+* **Fecha:** 20 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** El pipeline falló doblemente tras el hotfix: el CI arrojó `DuplicateColumn` (código duplicado en Alembic) y Render no desplegó. Además, se auditó la interfaz de Swagger UI por asimetría de datos.
+* **Prompt Principal Utilizado:** *"deseo saber que pasa con: el get/sensors/list sensors, devuleve: is_active... pero en el post/sensors/create sensors, no aparece... no tenemos la opcion de modificarlo?"*
+* **Uso de IA y Revisión de Código:** La IA diagnosticó que la duplicidad en Alembic corrompió el CI virgen. Sobre la duda de Swagger, la IA explicó que la asimetría visual respondía a la implementación del patrón de diseño Data Transfer Object (DTO) entre `SensorCreate` y `SensorOut`.
+* **Lo que cambié respecto a lo generado y el porqué (Criterio Técnico):**
+  1. *Cambio:* Reescribí manualmente el bloque `upgrade()` completo de Alembic como un "Hard Fix", purgando líneas duplicadas e inyectando `server_default` para `location`, `is_active` y `status`.
+  2. *Cambio:* Decidí **NO** modificar los esquemas de entrada para hacerlos simétricos a los de salida.
+  *Por qué (Criterio Técnico):* Añadir campos como `is_active` al payload de creación (POST) viola el Principio de Menor Privilegio, abriendo vectores de inyección donde un usuario externo podría manipular el estado interno del sistema. El patrón DTO garantiza que el backend sea el único dictador del estado inicial, salvaguardando la seguridad de la API.
