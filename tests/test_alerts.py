@@ -24,6 +24,8 @@ def test_record_reading_triggers_alert_when_exceeding_threshold() -> None:
     mock_sensor = MagicMock(spec=SensorModel)
     mock_sensor.id = "SENSOR-01"
     mock_sensor.threshold = 30.0
+    mock_sensor.location = "Bodega 1"  # <--- AÑADIDO
+    mock_sensor.is_active = True  # <--- AÑADIDO
     mock_repo.get_sensor.return_value = mock_sensor
 
     spy_strategy = SpyAlertStrategy()
@@ -40,12 +42,14 @@ def test_record_reading_no_alert_when_below_threshold() -> None:
     mock_repo = MagicMock(spec=SensorHubRepository)
     mock_sensor = MagicMock(spec=SensorModel)
     mock_sensor.id = "SENSOR-01"
-    mock_sensor.threshold = 30.0
+    mock_sensor.threshold = 50.0
+    mock_sensor.location = "Bodega 1"  # <--- AÑADIDO
+    mock_sensor.is_active = True  # <--- AÑADIDO
     mock_repo.get_sensor.return_value = mock_sensor
 
     spy_strategy = SpyAlertStrategy()
     service = SensorHubService(repo=mock_repo, alert_strategy=spy_strategy)
 
-    service.record_reading(sensor_id="SENSOR-01", value=25.0, unit="C")
+    service.record_reading(sensor_id="SENSOR-01", value=45.0, unit="C")
 
     assert len(spy_strategy.alerts_sent) == 0

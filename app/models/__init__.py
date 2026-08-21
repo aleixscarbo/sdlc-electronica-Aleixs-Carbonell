@@ -12,7 +12,9 @@ class SensorModel(Base):
     id: Mapped[str] = mapped_column(String(50), primary_key=True)
     type: Mapped[str] = mapped_column(String(50))  # ej. 'temperature', 'humidity'
     name: Mapped[str] = mapped_column(String(100))
+    location: Mapped[str] = mapped_column(String(100), default="Desconocida")
     threshold: Mapped[float | None] = mapped_column(Float, nullable=True)
+    is_active: Mapped[bool] = mapped_column(default=True)
 
     # Relación: Un sensor tiene muchas lecturas
     readings: Mapped[list["ReadingModel"]] = relationship(
@@ -51,4 +53,5 @@ class AlertModel(Base):
         server_default=func.now(),  # <-- Generación automática en PostgreSQL/SQLite
         nullable=False,
     )
+    status: Mapped[str] = mapped_column(String(20), default="open")
     sensor: Mapped["SensorModel"] = relationship(back_populates="alerts")

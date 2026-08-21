@@ -21,6 +21,7 @@ async def run_smoke_test() -> None:
             "id": "smoke-test-001",
             "name": "Smoke Sensor",
             "type": "temperature",
+            "location": "Bodega 1",  # <--- AÑADIDO AQUÍ
         }
         response = await client.post("/sensors/", json=sensor_data)
         assert response.status_code in [200, 201], (
@@ -41,11 +42,8 @@ async def run_smoke_test() -> None:
         # 3. Consultar las lecturas/alertas (Smoke cleared)
         print("3. Consultando datos registrados...")
         response = await client.get("/sensors/")
-        assert response.status_code == 200, (
-            f"Fallo al consultar sensores: {response.text}"
-        )
-
-        print("SMOKE TEST SUPERADO. El esquema de PostgreSQL esta perfecto.")
+        assert response.status_code == 200
+        print("Smoke Test superado con éxito.")
 
 
 if __name__ == "__main__":

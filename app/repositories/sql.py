@@ -14,9 +14,16 @@ class SQLSensorHubRepository(SensorHubRepository):
 
     # --- SENSORES ---
     def add_sensor(
-        self, sensor_id: str, type: str, name: str, threshold: float | None = None
+        self,
+        sensor_id: str,
+        type: str,
+        name: str,
+        location: str,
+        threshold: float | None = None,
     ) -> SensorModel:
-        sensor = SensorModel(id=sensor_id, type=type, name=name, threshold=threshold)
+        sensor = SensorModel(
+            id=sensor_id, type=type, name=name, location=location, threshold=threshold
+        )
         try:
             self.session.add(sensor)
             self.session.commit()
@@ -30,14 +37,19 @@ class SQLSensorHubRepository(SensorHubRepository):
         return self.session.get(SensorModel, sensor_id)
 
     def list_sensors(self, limit: int = 50, offset: int = 0) -> list[SensorModel]:
-        stmt = select(SensorModel).offset(offset).limit(limit)
+        stmt = (
+            select(SensorModel)
+            .where(SensorModel.is_active)
+            .offset(offset)
+            .limit(limit)
+        )
         return list(self.session.scalars(stmt).all())
 
     def delete_sensor(self, sensor_id: str) -> bool:
         sensor = self.get_sensor(sensor_id)
-        if sensor:
+        if sensor and sensor.is_active:
             try:
-                self.session.delete(sensor)
+                sensor.is_active = False  # SOFT DELETE
                 self.session.commit()
                 return True
             except SQLAlchemyError as e:

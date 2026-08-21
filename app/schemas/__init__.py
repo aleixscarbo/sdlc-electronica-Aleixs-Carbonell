@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 class SensorBase(BaseModel):
     type: str = Field(..., description="Tipo de sensor (ej. temperature, humidity)")
     name: str = Field(..., description="Nombre del sensor")
+    location: str = Field(..., description="Ubicación física del sensor")  # <- ¡NUEVO!
     threshold: float | None = Field(
         default=None, description="Umbral para alerta de anomalías", allow_inf_nan=False
     )
@@ -18,6 +19,7 @@ class SensorCreate(SensorBase):
 
 class SensorOut(SensorBase):
     id: str
+    is_active: bool
     model_config = ConfigDict(from_attributes=True)
 
 
