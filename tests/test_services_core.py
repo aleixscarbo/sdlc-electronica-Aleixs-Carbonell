@@ -196,23 +196,30 @@ class TestAlertOperations:
 
     def test_update_alert_status_success(self) -> None:
         mock_repo = MagicMock(spec=SensorHubRepository)
-        
-        mock_alert = MagicMock(spec=AlertModel)
-        mock_alert.id = 1
-        mock_alert.status = "open"
-        mock_repo.get_alert.return_value = mock_alert
-        
+
+        # 1. Simulamos lo que devuelve get_alert
+        mock_alert_old = MagicMock(spec=AlertModel)
+        mock_alert_old.id = 1
+        mock_alert_old.status = "open"
+        mock_repo.get_alert.return_value = mock_alert_old
+
+        # 2. Simulamos lo que devuelve update_alert (¡ESTO FALTABA!)
+        mock_alert_updated = MagicMock(spec=AlertModel)
+        mock_alert_updated.id = 1
+        mock_alert_updated.status = "acknowledged"
+        mock_repo.update_alert.return_value = mock_alert_updated
+
         service = SensorHubService(repo=mock_repo)
-        
+
         result = service.update_alert_status(alert_id=1, new_status="acknowledged")
-        
+
         assert result.status == "acknowledged"
         mock_repo.update_alert.assert_called_once_with(1, {"status": "acknowledged"})
 
     def test_update_alert_status_invalid_state(self) -> None:
         mock_repo = MagicMock(spec=SensorHubRepository)
         service = SensorHubService(repo=mock_repo)
-        
+
         with pytest.raises(ValueError, match="Estado no permitido"):
             service.update_alert_status(alert_id=1, new_status="ignored")
 
@@ -220,7 +227,7 @@ class TestAlertOperations:
         mock_repo = MagicMock(spec=SensorHubRepository)
         mock_repo.get_alert.return_value = None
         service = SensorHubService(repo=mock_repo)
-        
+
         with pytest.raises(ValueError, match="Alerta no encontrada"):
             service.update_alert_status(alert_id=99, new_status="resolved")
 
@@ -228,10 +235,10 @@ class TestAlertOperations:
         """Prueba la consulta de alertas activas (open, acknowledged)."""
         mock_repo = MagicMock(spec=SensorHubRepository)
         mock_repo.list_active_alerts.return_value = []
-        
+
         service = SensorHubService(repo=mock_repo)
-        
+
         result = service.get_active_alerts("S1")
-        
+
         assert result == []
         mock_repo.list_active_alerts.assert_called_once_with("S1")
