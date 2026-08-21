@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -38,10 +39,7 @@ class SQLSensorHubRepository(SensorHubRepository):
 
     def list_sensors(self, limit: int = 50, offset: int = 0) -> list[SensorModel]:
         stmt = (
-            select(SensorModel)
-            .where(SensorModel.is_active)
-            .offset(offset)
-            .limit(limit)
+            select(SensorModel).where(SensorModel.is_active).offset(offset).limit(limit)
         )
         return list(self.session.scalars(stmt).all())
 
@@ -88,7 +86,9 @@ class SQLSensorHubRepository(SensorHubRepository):
         stmt = stmt.offset(offset).limit(limit)
         return list(self.session.scalars(stmt).all())
 
-    def update_reading(self, reading_id: int, data: dict) -> ReadingModel | None:
+    def update_reading(
+        self, reading_id: int, data: dict[str, Any]
+    ) -> ReadingModel | None:
         reading = self.get_reading(reading_id)
         if reading:
             try:
@@ -128,4 +128,28 @@ class SQLSensorHubRepository(SensorHubRepository):
 
     def list_alerts(self, sensor_id: str) -> list[AlertModel]:
         stmt = select(AlertModel).where(AlertModel.sensor_id == sensor_id)
+        return list(self.session.scalars(stmt).all())
+
+    def get_alert(self, alert_id: int) -> AlertModel | None:
+        return self.session.get(AlertModel, alert_id)
+
+    def update_alert(self, alert_id: int, data: dict[str, Any]) -> AlertModel | None:
+        alert = self.get_alert(alert_id)
+        if alert:
+            try:
+                for key, val in data.items():
+                    setattr(alert, key, val)
+                self.session.commit()
+                self.session.refresh(alert)
+                return alert
+            except SQLAlchemyError as e:
+                self.session.rollback()
+                raise e
+        return None
+
+    def list_active_alerts(self, sensor_id: str) -> list[AlertModel]:
+        stmt = select(AlertModel).where(
+            AlertModel.sensor_id == sensor_id,
+            AlertModel.status.in_(["open", "acknowledged"]),
+        )
         return list(self.session.scalars(stmt).all())
