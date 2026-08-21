@@ -1,10 +1,17 @@
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.dependencies import get_sensor_hub_service
-from app.schemas import AlertOut, ReadingCreate, ReadingOut, SensorCreate, SensorOut
+from app.schemas import (
+    AlertOut,
+    AlertUpdate,
+    ReadingCreate,
+    ReadingOut,
+    SensorCreate,
+    SensorOut,
+)
 from app.services.core import SensorHubService
 
 router = APIRouter(prefix="/sensors", tags=["Sensors"])
@@ -54,10 +61,37 @@ def list_sensor_readings(
     return [ReadingOut.model_validate(r) for r in readings]
 
 
-@router.get("/{sensor_id}/alerts", response_model=list[AlertOut])
+@router.get("/{sensor_id}/alerts", response_model=list[AlertOut], status_code=200)
 def get_sensor_alerts(
     sensor_id: str,
     service: Annotated[SensorHubService, Depends(get_sensor_hub_service)],
 ) -> list[AlertOut]:
-    alerts = service._repo.list_alerts(sensor_id)
-    return [AlertOut.model_validate(a) for a in alerts]
+    """Obtiene todas las alertas activas (open o acknowledged) de un sensor."""
+    try:
+        alerts = service.get_active_alerts(sensor_id)
+        return [AlertOut.model_validate(a) for a in alerts]
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+
+@router.patch(
+    "/{sensor_id}/alerts/{alert_id}", response_model=AlertOut, status_code=200
+)
+def update_sensor_alert(
+    sensor_id: str,
+    alert_id: int,
+    update_data: AlertUpdate,
+    service: Annotated[SensorHubService, Depends(get_sensor_hub_service)],
+) -> AlertOut:
+    """Actualiza el estado de una alerta específica."""
+    try:
+        # El servicio se encarga de validar que 
+        # el estado sea permitido (open, acknowledged, resolved)
+        updated_alert = service.update_alert_status(alert_id, update_data.status)
+        return AlertOut.model_validate(updated_alert)
+    except ValueError as e:
+        # Si el error es por estado no permitido, devolvemos un 400 Bad Request
+        if "Estado no permitido" in str(e):
+            raise HTTPException(status_code=400, detail=str(e)) from e
+        # Si no encuentra la alerta, devolvemos un 404 Not Found
+        raise HTTPException(status_code=404, detail=str(e)) from e

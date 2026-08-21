@@ -630,3 +630,14 @@ Actuó como herramienta de diagnóstico SRE analizando los logs de producción e
   1. *Cambio:* Reescribí manualmente el bloque `upgrade()` completo de Alembic como un "Hard Fix", purgando líneas duplicadas e inyectando `server_default` para `location`, `is_active` y `status`.
   2. *Cambio:* Decidí **NO** modificar los esquemas de entrada para hacerlos simétricos a los de salida.
   *Por qué (Criterio Técnico):* Añadir campos como `is_active` al payload de creación (POST) viola el Principio de Menor Privilegio, abriendo vectores de inyección donde un usuario externo podría manipular el estado interno del sistema. El patrón DTO garantiza que el backend sea el único dictador del estado inicial, salvaguardando la seguridad de la API.
+
+---
+
+## [ENTRADA 39] Semana 6 - Proyecto Final: Implementación RF-5 y Resolución de Schema Drift
+* **Fecha:** 21 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Implementar el Requisito Funcional 5 (RF-5) para listar y actualizar estados de alertas, y exponerlo mediante FastAPI.
+* **Prompt Principal Utilizado:** *"no se soluciono, mi cmd se ve asi... sqlite3.OperationalError: unknown function: now()"*
+* **Uso de IA y Revisión de Código:** Tras implementar los esquemas de Pydantic y los endpoints en el Router, se detectó un Error 500 al insertar una alerta. La IA diagnosticó un *Schema Drift* entre PostgreSQL (Render) y SQLite (Local) provocado por la función nativa `now()`.
+* **Lo que cambié respecto a lo generado y el porqué (Criterio Técnico):**
+  * *Cambio:* Se modificó el modelo SQLAlchemy y el archivo de migración de Alembic para reemplazar `sa.func.now()` por el estándar universal `sa.text("CURRENT_TIMESTAMP")`. Se forzó la eliminación y reconstrucción de la base de datos local.
+  * *Por qué (Criterio Técnico):* En una arquitectura profesional, el código ORM debe ser verdaderamente agnóstico al motor de base de datos. Depender de funciones exclusivas de un motor rompe la paridad entre desarrollo y producción. Al usar el estándar ANSI SQL, garantizamos que el pipeline de pruebas (SQLite) y el entorno de producción (Postgres) se comporten de manera idéntica.
