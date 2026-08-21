@@ -1,6 +1,7 @@
 """
 Estrategias de Alerta (Patrón Strategy / OCP)
 """
+
 from typing import Protocol
 
 from app.logger import logger
@@ -10,8 +11,7 @@ from app.repositories.base import SensorHubRepository
 class AlertNotificationStrategy(Protocol):
     """Interfaz abstracta para el envío de alertas."""
 
-    def notify(self, sensor_id: str, value: float, threshold: float) -> None:
-        ...
+    def notify(self, sensor_id: str, value: float, threshold: float) -> None: ...
 
 
 class ConsoleAlertStrategy:
@@ -19,7 +19,8 @@ class ConsoleAlertStrategy:
 
     def notify(self, sensor_id: str, value: float, threshold: float) -> None:
         logger.info(
-            f"[ALERTA] Sensor {sensor_id} excedió el umbral ({threshold}). Lectura: {value}"
+            f"[ALERTA] Sensor {sensor_id} excedió el umbral "
+            f"({threshold}). Lectura: {value}"
         )
 
 
