@@ -551,3 +551,25 @@ La IA procesó todo el árbol de archivos (routers, services, repos, schemas, te
 - **Por qué:** Durante la fase 3, la IA cometió un error de contexto: generó un bloque de código que pretendía reemplazar el archivo de pruebas `test_services_core.py` completo, lo que habría borrado más de 140 líneas de tests preexistentes.
 - **Intervención:** Como ingeniero a cargo, detuve la copia ciega (*copy-paste*), identifiqué la sobreescritura destructiva, revertí el cambio en VS Code e instruí a la IA para que proporcionara únicamente la modificación *quirúrgica* de la línea de aserción defectuosa (`pytest.raises(SensorNotFoundError)`). Además, se tuvo que resolver manualmente una desincronización residual en Mypy (`__init__.py` faltante) y un error de expresión regular en un `match` de Pytest.
 - **Resultado:** La suite pasó de estar rota a obtener un **100% de éxito (20/20)**, una cobertura del **86.42%**, cero advertencias de formato (Ruff) y cero quejas de tipado estricto (Mypy). Se demostró que la IA amplifica la velocidad de refactorización, pero el ingeniero es el responsable final de la integridad del código fuente.
+
+---
+
+## Entrada 33: Depuración SRE, Resolución de Error 500 y Corrección Estructural (Alembic y SQLAlchemy)
+**Fecha:** 20 de Agosto de 2026
+**Fase:** Transición a Semana 06 - SRE y Resolución de Deuda Técnica en Producción
+
+**Contexto:** Tras completar el merge de la Semana 5, se ejecutó una prueba de humo (Smoke Test) manual en la interfaz de Swagger alojada en Render. El endpoint `GET /sensors/{sensor_id}/alerts` colapsó arrojando un `HTTP 500 Internal Server Error`. El fallo se originó por un desajuste entre Pydantic (que exigía un `datetime` estricto en el campo `created_at`) y PostgreSQL (que retornaba `NULL` debido a que el valor por defecto solo estaba definido en la capa de Python y no en el motor de base de datos).
+
+**Prompt utilizado:**
+> "estaba probando mi swagger como test final y los logs de mi webservice, sensorhub Api, me dan estos logs: ... GET /sensors/Temp04/alerts HTTP/1.1 500 Internal Server Error ... pydantic_core._pydantic_core.ValidationError: 1 validation error for AlertOut ... created_at Field required"
+
+**¿Qué produjo la IA?**
+Actuó como herramienta de diagnóstico SRE analizando los logs de producción e identificando instantáneamente el desacople ORM/Pydantic. 
+1. Propuso un *hotfix* de mitigación (hacer opcional el campo `created_at: datetime | None = None`) para restaurar la disponibilidad de la API inmediatamente.
+2. Tras mi decisión de no avanzar con deuda técnica, la IA trazó un plan de acción estructural aislando el trabajo en la rama `fix/alert-timestamp-migration`: implementar `server_default=func.now()` en SQLAlchemy, generar la migración de Alembic y restablecer la validación estricta de Pydantic. 
+3. Diagnosticó y resolvió un error de inicialización cruzada en el ORM (`InvalidRequestError`), forzando la creación de la relación bidireccional faltante en `SensorModel.alerts`.
+
+**Decisión y Criterio Técnico (El valor humano):**
+- **Veredicto:** INTERVENCIÓN DIRECTA CONTRA EL CONSEJO DE LA IA (SOBRE DEUDA TÉCNICA Y LINTERS).
+- **Por qué (Rechazo de Deuda Técnica):** Tras aplicar el *hotfix* inicial, la IA sugirió que el código ya era apto para avanzar a la Semana 6. Ejerciendo mi criterio arquitectónico, rechacé la idea. En un sistema IoT, una alerta sin estampa de tiempo asegurada pierde todo valor forense. Era imperativo crear una rama de fix, modificar el esquema en PostgreSQL y asegurar la integridad de datos antes de continuar.
+- **Por qué (Rigor en CI/CD):** Al finalizar la refactorización, Ruff arrojó advertencias `E501 Line too long` en el archivo autogenerado de Alembic. La IA sugirió ignorar el error por ser código autogenerado. Rechacé tajantemente el consejo y corté las líneas de código de manera manual. En una arquitectura madura con integración continua (GitHub Actions), cualquier advertencia romperá el pipeline. Flexibilizar el *linter* sienta un mal precedente y destruye el estándar de "cero advertencias" del proyecto.
