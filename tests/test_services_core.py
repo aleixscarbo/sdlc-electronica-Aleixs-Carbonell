@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.models import ReadingModel, SensorModel
+from app.models import AlertModel, ReadingModel, SensorModel
 from app.repositories.base import SensorHubRepository
 from app.services.core import SensorHubService
 from app.services.exceptions import SensorAlreadyExistsError, SensorNotFoundError
@@ -189,3 +189,56 @@ class TestReadingOperations:
 
         assert service.delete_reading(1) is True
         mock_repo.delete_reading.assert_called_once_with(1)
+
+
+class TestAlertOperations:
+    """Pruebas para gestión de alertas (RF-5)."""
+
+    def test_update_alert_status_success(self) -> None:
+        mock_repo = MagicMock(spec=SensorHubRepository)
+
+        # 1. Simulamos lo que devuelve get_alert
+        mock_alert_old = MagicMock(spec=AlertModel)
+        mock_alert_old.id = 1
+        mock_alert_old.status = "open"
+        mock_repo.get_alert.return_value = mock_alert_old
+
+        # 2. Simulamos lo que devuelve update_alert (¡ESTO FALTABA!)
+        mock_alert_updated = MagicMock(spec=AlertModel)
+        mock_alert_updated.id = 1
+        mock_alert_updated.status = "acknowledged"
+        mock_repo.update_alert.return_value = mock_alert_updated
+
+        service = SensorHubService(repo=mock_repo)
+
+        result = service.update_alert_status(alert_id=1, new_status="acknowledged")
+
+        assert result.status == "acknowledged"
+        mock_repo.update_alert.assert_called_once_with(1, {"status": "acknowledged"})
+
+    def test_update_alert_status_invalid_state(self) -> None:
+        mock_repo = MagicMock(spec=SensorHubRepository)
+        service = SensorHubService(repo=mock_repo)
+
+        with pytest.raises(ValueError, match="Estado no permitido"):
+            service.update_alert_status(alert_id=1, new_status="ignored")
+
+    def test_update_alert_status_not_found(self) -> None:
+        mock_repo = MagicMock(spec=SensorHubRepository)
+        mock_repo.get_alert.return_value = None
+        service = SensorHubService(repo=mock_repo)
+
+        with pytest.raises(ValueError, match="Alerta no encontrada"):
+            service.update_alert_status(alert_id=99, new_status="resolved")
+
+    def test_get_active_alerts(self) -> None:
+        """Prueba la consulta de alertas activas (open, acknowledged)."""
+        mock_repo = MagicMock(spec=SensorHubRepository)
+        mock_repo.list_active_alerts.return_value = []
+
+        service = SensorHubService(repo=mock_repo)
+
+        result = service.get_active_alerts("S1")
+
+        assert result == []
+        mock_repo.list_active_alerts.assert_called_once_with("S1")

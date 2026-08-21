@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.models import ReadingModel, SensorModel
+from app.models import AlertModel, ReadingModel, SensorModel
 from app.repositories.base import SensorHubRepository
 from app.services.alerts import AlertNotificationStrategy, ConsoleAlertStrategy
 from app.services.exceptions import SensorAlreadyExistsError, SensorNotFoundError
@@ -68,3 +68,21 @@ class SensorHubService:
 
     def delete_reading(self, reading_id: int) -> bool:
         return self._repo.delete_reading(reading_id)
+
+    # --- ALERTAS (RF-5) ---
+    def update_alert_status(self, alert_id: int, new_status: str) -> AlertModel:
+        if new_status not in ["open", "acknowledged", "resolved"]:
+            raise ValueError("Estado no permitido")
+
+        alert = self._repo.get_alert(alert_id)
+        if not alert:
+            raise ValueError("Alerta no encontrada")
+
+        updated_alert = self._repo.update_alert(alert_id, {"status": new_status})
+        if not updated_alert:
+            raise ValueError("Alerta no encontrada")
+
+        return updated_alert
+
+    def get_active_alerts(self, sensor_id: str) -> list[AlertModel]:
+        return self._repo.list_active_alerts(sensor_id)

@@ -70,7 +70,17 @@ class ReadingOut(ReadingBase):
 
 
 # --- ESQUEMAS PARA ALERTAS ---
-class AlertOut(BaseModel):
+class AlertBase(BaseModel):
+    status: str = Field(
+        ..., description="Estado de la alerta: open, acknowledged, resolved"
+    )
+
+
+class AlertUpdate(AlertBase):
+    pass
+
+
+class AlertOut(AlertBase):
     id: int
     sensor_id: str
     value: float

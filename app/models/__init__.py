@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Float, ForeignKey, String, func
+from sqlalchemy import DateTime, Float, ForeignKey, String, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -50,7 +50,7 @@ class AlertModel(Base):
     threshold: Mapped[float] = mapped_column(Float)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),  # <-- Generación automática en PostgreSQL/SQLite
+        server_default=text("CURRENT_TIMESTAMP"),  # <-- ¡ESTÁNDAR UNIVERSAL!
         nullable=False,
     )
     status: Mapped[str] = mapped_column(String(20), default="open")
