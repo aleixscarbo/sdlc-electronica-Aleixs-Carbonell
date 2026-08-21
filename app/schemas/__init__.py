@@ -87,3 +87,9 @@ class AlertOut(AlertBase):
     threshold: float
     created_at: datetime
     model_config = ConfigDict(from_attributes=True)
+
+# --- ESQUEMAS PARA ESTADÍSTICAS (RF-6) ---
+class SensorStats(BaseModel):
+    min: float = Field(..., description="Valor mínimo registrado")
+    max: float = Field(..., description="Valor máximo registrado")
+    avg: float = Field(..., description="Valor promedio registrado")
