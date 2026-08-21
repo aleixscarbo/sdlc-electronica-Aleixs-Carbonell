@@ -644,7 +644,7 @@ Actuó como herramienta de diagnóstico SRE analizando los logs de producción e
 
 ---
 
-## [ENTRADA 39] Semana 6 - Proyecto Final: Estadísticas Analíticas y Optimización SQL (RF-6)
+## [ENTRADA 40] Semana 6 - Proyecto Final: Estadísticas Analíticas y Optimización SQL (RF-6)
 * **Fecha:** 21 de Agosto de 2026
 * **Contexto/Objetivo de la Sesión:** Implementar el Requisito Funcional 6 (RF-6) para obtener estadísticas (mínimo, máximo y promedio) de un sensor en un periodo determinado.
 * **Prompt Principal Utilizado:** *"no. asi se ve mi cmd: ... ERROR: Coverage failure: total of 22 is less than fail-under=80"*
@@ -653,3 +653,13 @@ Actuó como herramienta de diagnóstico SRE analizando los logs de producción e
   * *Cambio:* Se implementaron las funciones de agregación `func.min`, `func.max` y `func.avg` directamente en el Repositorio (SQLAlchemy) en lugar de extraer los registros y procesarlos en Python. Se agregó el esquema estricto `SensorStats`.
   * *Por qué (Criterio Técnico):* Extraer miles de lecturas a la memoria de la aplicación web con un bucle `for` provocaría cuellos de botella y eventuales caídas por *Out of Memory* (OOM). Al delegar los cálculos de agregación al motor SQL, el consumo de memoria de la API se mantiene en $O(1)$, garantizando una escalabilidad masiva y una respuesta en milisegundos.
 
+---
+
+## [ENTRADA 41] Semana 6 - Proyecto Final: Logger Estructurado y Métricas Cloud Native (RF-7 / RNF-5)
+* **Fecha:** 21 de Agosto de 2026
+* **Contexto/Objetivo de la Sesión:** Implementar un logger estructurado en formato JSON (RNF-5) y un endpoint de salud avanzado que verifique el estado real de la base de datos y devuelva métricas (RF-7).
+* **Prompt Principal Utilizado:** *"no, los test no pasaron, asi se ve mi cmd: ... ImportError: cannot import name 'AlertNotificationStrategy'"*
+* **Uso de IA y Revisión de Código:** La IA proporcionó el código para `logger.py`, inyectó la dependencia en `main.py` e intentó refactorizar las estrategias de alerta. Se generó un fallo en la colección de pruebas (`ImportError`) debido a una alteración accidental del nombre de la interfaz (`AlertStrategy` en lugar de `AlertNotificationStrategy`).
+* **Lo que cambié respecto a lo generado y el porqué (Criterio Técnico):**
+  * *Cambio:* Se identificó la discrepancia del contrato en `alerts.py` y se restauró el nombre original de la interfaz `AlertNotificationStrategy` junto con el método `notify`, integrando el nuevo `logger.info` y `logger.warning`.
+  * *Por qué (Criterio Técnico):* En una arquitectura basada en el Principio Abierto/Cerrado (OCP) y la Inversión de Dependencias (DIP), el contrato (Protocolo) es sagrado. Cambiar el nombre de la interfaz rompe a todos los clientes que dependen de ella (en este caso, `SensorHubService`). Al restaurar el contrato, la inyección de dependencias volvió a funcionar y la suite de pruebas pasó al 100% en verde, garantizando una transición segura a logs JSON sin efectos secundarios.
